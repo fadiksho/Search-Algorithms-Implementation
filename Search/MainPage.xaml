@@ -23,7 +23,6 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
             <StackPanel>
                     <TextBlock Text="Search Type :" Margin="5"/>
                     <ComboBox VerticalAlignment="Center"
