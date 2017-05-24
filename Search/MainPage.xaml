@@ -19,7 +19,7 @@
                 <ColumnDefinition />
                 <ColumnDefinition />
                 <ColumnDefinition />
-                <ColumnDefinition />
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
@@ -67,7 +67,7 @@
                           Margin="5"
                           ItemsSource="{x:Bind SearchSpeed}"
                           SelectedItem="{x:Bind SelectedSearchSpeed, Mode=TwoWay}"
-                          SelectionChanged="ComboBox_SelectionChanged"
+                          SelectionChanged="ComboBox_SpeedSelectionChanged"
                           />
             </StackPanel>
             <Button Style="{StaticResource myButton}" FontFamily="Segoe MDL2 Assets"
@@ -76,13 +76,6 @@
                         Margin="5"
                         VerticalAlignment="Stretch"        
                         Click="Search_Button_Click"/>
-            <Button Style="{StaticResource myButton}"
-                    FontFamily="Segoe MDL2 Assets"
-                    Grid.Column="6"
-                    Content="&#xE104;"
-                    Margin="5"
-                    VerticalAlignment="Stretch"        
-                    Click="Button_Click"/>
         </Grid>
         
         <Grid x:Name="container"  Grid.Row="1" 
@@ -91,10 +84,7 @@
                                   Draw="canvascontroll_Draw"
                                   Canvas.ZIndex="2"/>
             <canvas:CanvasAnimatedControl x:Name="canvasanimate" 
-                                          Draw="Canvas_Draw"
-                                          />
-            <canvas:CanvasAnimatedControl Draw="CanvasAnimatedControl_Draw"/>
-
+                                          Draw="Canvas_Draw" />
         </Grid>
     </Grid>
 </Page>

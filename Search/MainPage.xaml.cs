@@ -23,80 +23,89 @@ namespace Search
     public sealed partial class MainPage : Page
     {
         // Binding Propery
+        public ObservableCollection<string> SearchTypes { get; set; } =
+            new ObservableCollection<string> { "DEPTH FIRST", "British Museum", "DEPTH FIRST WITH FILTER" };
+        public ObservableCollection<string> StartLocations { get; set; }
+            = new ObservableCollection<string>();
+        public ObservableCollection<string> GoolLocations { get; set; }
+            = new ObservableCollection<string>();
+        public ObservableCollection<string> Maps { get; set; } =
+            new ObservableCollection<string>() { "SMALL", "MEDIUM", "LARGE" };
+        public ObservableCollection<string> SearchSpeed { get; set; } =
+            new ObservableCollection<string>() { "X1", "X2", "X4" };
+        public string SelectedSearchType { get; set; }
+        public string StartLocation { get; set; }
+        public string GoolLocation { get; set; }
+        public string SelectedMap { get; set; }
+        public string SelectedSearchSpeed { get; set; }
 
-        public ObservableCollection<string> SearchTypes { get; set; }
-        public ObservableCollection<string> StartLocations { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> GoolLocations { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> Maps { get; set; }
-        public ObservableCollection<string> SearchSpeed { get; set; }
-        public string SelectedSearchType;
-        public string SelectedMap;
-        public string StartLocation;
-        public string GoolLocation;
-        public string SelectedSearchSpeed;
+        # region feilds
 
-        // Canavas Propery
-        float CanvasWidth;
-        float CanvasHeight;
+        float canvasWidth;
+        float canvasHeight;
         float startWidth;
         float width;
         float startHeight;
         float height;
-        float[] X_axis;
-        float[] Y_axis;
-        float circleradius;
-        List<Node> Nodes;
-        bool animationPlay;
+        float[] xAxis;
+        float[] yAxis;
+        float circleRadius;
+        List<Node> nodes;
         bool drawCorrentRoad;
         int speed = 1000;
+        Node startLocationOfPreviousNode;
+        Node goolLocationOfPreviousNode;
+        Node sL;
+        Node gL;
+        bool drawingAnimation;
 
-        Node StartLocationOfPreviousNode;
-        Node GoolLocationOfPreviousNode;
-
-        Node SL;
-        Node GL;
+        #endregion
 
         public List<Road> AvaiableRoads { get; set; } = new List<Road>();
         public List<Path> DiscoverdRoad { get; set; } = new List<Path>();
         public List<Node> Walks { get; set; } = new List<Node>();
-        
         public Queue<List<Node>> Path { get; set; } = new Queue<List<Node>>();
-        
+
         public MainPage()
         {
             this.InitializeComponent();
-            SearchTypes = new ObservableCollection<string>() { "DEPTH FIRST", "DEPTH FIRST WITH FILTER", "HILL CLIM" };
             SelectedSearchType = SearchTypes[0];
-            Maps = new ObservableCollection<string>() { "SMALL", "MEDIUM", "LARGE" };
-            SearchSpeed = new ObservableCollection<string> { "X1", "X2", "X4" };
             SelectedMap = Maps[0];
             SelectedSearchSpeed = SearchSpeed[0];
-            circleradius = 15;
-            newText = "!Fady!";
+            circleRadius = 15;
+            burningText = "Cool!";
             CreateFlameEffect();
         }
 
         private void Canvas_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
-            if(AvaiableRoads.Count > 0)
+            if (AvaiableRoads.Count > 0)
             {
                 for (int i = 0; i < Walks.Count - 1; i++)
                 {
                     args.DrawingSession.DrawLine(Walks[i].X, Walks[i].Y, Walks[i + 1].X, Walks[i + 1].Y, Colors.Red, 10);
                 }
             }
-            
+
+            // burning Cool! Text 
+            var ds = args.DrawingSession;
+            SetupText(sender);
+            ConfigureEffect(args.Timing);
+            ds.DrawImage(composite, width, height - startHeight * 2);
         }
 
         private void canvascontroll_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
-            for (int i = 0; i < Nodes.Count; i++)
+            // Draw the road
+            for (int i = 0; i < nodes.Count; i++)
             {
-                for (int j = 0; j < Nodes[i].ConnectedNode.Count; j++)
+                for (int j = 0; j < nodes[i].ConnectedNode.Count; j++)
                 {
-                    args.DrawingSession.DrawLine(Nodes[i].X, Nodes[i].Y, Nodes[i].ConnectedNode[j].X, Nodes[i].ConnectedNode[j].Y, Colors.Gray, 5f);
+                    args.DrawingSession.DrawLine(nodes[i].X, nodes[i].Y, nodes[i].ConnectedNode[j].X, nodes[i].ConnectedNode[j].Y, Colors.Gray, 5f);
                 }
             }
+
+            // Draw the Corrent Path
             if (AvaiableRoads.Count > 0 && drawCorrentRoad)
             {
                 for (int i = AvaiableRoads[0].PassedRoad.Count - 1; i > 0; i--)
@@ -106,34 +115,35 @@ namespace Search
                 }
             }
 
-            for (int i = 0; i < Nodes.Count; i++)
+            // Draw the node
+            for (int i = 0; i < nodes.Count; i++)
             {
-                args.DrawingSession.FillCircle(Nodes[i].X, Nodes[i].Y, circleradius, Colors.Black);
+                args.DrawingSession.FillCircle(nodes[i].X, nodes[i].Y, circleRadius, Colors.Black);
                 var textformat = new CanvasTextFormat();
                 textformat.HorizontalAlignment = CanvasHorizontalAlignment.Center;
                 textformat.VerticalAlignment = CanvasVerticalAlignment.Center;
-                args.DrawingSession.DrawText(Nodes[i].NodeName, Nodes[i].X - circleradius / 4, Nodes[i].Y - circleradius / 4, 5f, 5f, Colors.White, textformat);
-                if (Nodes[i].StartPoint)
+                args.DrawingSession.DrawText(nodes[i].NodeName, nodes[i].X - circleRadius / 4, nodes[i].Y - circleRadius / 4, 5f, 5f, Colors.White, textformat);
+                if (nodes[i].StartPoint)
                 {
-                    args.DrawingSession.DrawCircle(Nodes[i].X, Nodes[i].Y, circleradius, Colors.Red, 5f);
+                    args.DrawingSession.DrawCircle(nodes[i].X, nodes[i].Y, circleRadius, Colors.Red, 5f);
                 }
-                if (Nodes[i].GoolPoint)
+                if (nodes[i].GoolPoint)
                 {
-                    args.DrawingSession.DrawCircle(Nodes[i].X, Nodes[i].Y, circleradius, Colors.LightGreen, 5f);
+                    args.DrawingSession.DrawCircle(nodes[i].X, nodes[i].Y, circleRadius, Colors.LightGreen, 5f);
                 }
             }
         }
 
         private void container_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            CanvasWidth = (float)container.ActualWidth;
-            startWidth = CanvasWidth / 10;
-            width = CanvasWidth - startWidth;
-            CanvasHeight = (float)container.ActualHeight;
-            startHeight = CanvasHeight / 20;
-            height = CanvasHeight - startHeight;
-            X_axis = new float[10] { startWidth, width / 5, 3 * width / 10, 2 * width / 5, width / 2, 3 * width / 5, 7 * width / 10, 4 * width / 5, 9 * width / 10, width };
-            Y_axis = new float[5] { startHeight, height / 4, height / 2, 3 * height / 4, height };
+            canvasWidth = (float)container.ActualWidth;
+            startWidth = canvasWidth / 10;
+            width = canvasWidth - startWidth;
+            canvasHeight = (float)container.ActualHeight;
+            startHeight = canvasHeight / 20;
+            height = canvasHeight - startHeight;
+            xAxis = new float[10] { startWidth, width / 5, 3 * width / 10, 2 * width / 5, width / 2, 3 * width / 5, 7 * width / 10, 4 * width / 5, 9 * width / 10, width };
+            yAxis = new float[5] { startHeight, height / 4, height / 2, 3 * height / 4, height };
 
             if (SelectedMap == Maps[0])
             {
@@ -147,21 +157,25 @@ namespace Search
 
         private void Search_Button_Click(object sender, RoutedEventArgs e)
         {
-            DiscoverdRoad.Clear();
-            if (SelectedSearchType == SearchTypes[0] && SL != null && GL != null)
-            {
-                AvaiableRoads = new List<Road>();
+            // stop drawing animation
+            stopDawingAnimations();
 
-                Road road = new Road() { HeadNode = SL };
+            if (sL != null && gL != null)
+            {
+                AvaiableRoads.Clear();
+                Road road = new Road() { HeadNode = sL };
                 road.PossibleRoad = new Queue<Node>();
                 road.PassedRoad = new List<Node>();
                 foreach (var item in road.HeadNode.ConnectedNode)
                 {
                     road.PossibleRoad.Enqueue(item);
                 }
-                DepthFirstSearch(road);
+                if (SelectedSearchType == SearchTypes[0])
+                    DepthFirstSearch(road);
+                else if (SelectedSearchType == SearchTypes[1])
+                    BrithishMuseum(road);
             }
-            if(AvaiableRoads.Count > 0)
+            if (AvaiableRoads.Count > 0)
             {
                 foreach (var path in AvaiableRoads[0].PassedRoad)
                 {
@@ -174,47 +188,9 @@ namespace Search
                     }
                 }
             }
-            
+
+            // draw animation path
             DrawPath();
-        }
-
-        private void DepthFirstSearchTest(Road road)
-        {
-            if (road.HeadNode.GoolPoint)
-            {
-                road.PassedRoad.Insert(0, road.HeadNode);
-                AvaiableRoads.Add(road);
-                return;
-            }
-            else if (road.PossibleRoad == null || road.PossibleRoad.Count <= 0)
-                return;
-            else
-            {
-                Road extendedRoad = new Road();
-                extendedRoad.PassedRoad = new List<Node>();
-                extendedRoad.PassedRoad.Add(road.HeadNode);
-                foreach (var item in road.PassedRoad)
-                    extendedRoad.PassedRoad.Add(item);
-
-                while (road.PossibleRoad.Count > 0)
-                {
-                    extendedRoad.HeadNode = road.PossibleRoad.Dequeue();
-                    extendedRoad.PossibleRoad = new Queue<Node>();
-                    foreach (var item in extendedRoad.HeadNode.ConnectedNode)
-                    {
-                        bool passed = false;
-                        foreach (var pastroad in extendedRoad.PassedRoad)
-                        {
-                            if (pastroad.NodeName == item.NodeName)
-                                passed = true;
-                        }
-                        if (!passed)
-                            extendedRoad.PossibleRoad.Enqueue(item);
-                    }
-                    DepthFirstSearchTest(extendedRoad);
-                }
-            }
-            return;
         }
 
         private void DepthFirstSearch(Road road)
@@ -263,12 +239,220 @@ namespace Search
                     }
                 }
             }
-            return;
+        }
+
+        private void BrithishMuseum(Road road)
+        {
+            Path path = new Path();
+            path.Node = road.HeadNode;
+            DiscoverdRoad.Add(path);
+            List<Node> extendednodes = new List<Node>();
+            foreach (var node in road.PossibleRoad)
+            {
+                extendednodes.Add(node);
+            }
+            for (int i = 0; i < extendednodes.Count; i++)
+            {
+                if (extendednodes[i].GoolPoint == true)
+                {
+
+                }
+            }
+            if (road.HeadNode.GoolPoint)
+            {
+                road.PassedRoad.Insert(0, road.HeadNode);
+                AvaiableRoads.Add(road);
+                return;
+            }
+            else
+            {
+                while (road.PossibleRoad.Count != 0)
+                {
+                    road.HeadNode = road.PossibleRoad.Dequeue();
+                    BrithishMuseum(road);
+                }
+                if (AvaiableRoads.Count <= 0)
+                {
+                    Road extendedRoad = new Road();
+                    extendedRoad.PassedRoad = new List<Node>();
+                    extendedRoad.PassedRoad.Add(road.HeadNode);
+                    foreach (var item in road.PassedRoad)
+                        extendedRoad.PassedRoad.Add(item);
+                    foreach (var item in extendedRoad.HeadNode.ConnectedNode)
+                    {
+                        bool passed = false;
+                        foreach (var pastroad in extendedRoad.PassedRoad)
+                        {
+                            if (pastroad.NodeName == item.NodeName)
+                                passed = true;
+                        }
+                        if (!passed)
+                            extendedRoad.PossibleRoad.Enqueue(item);
+                    }
+
+                }
+
+            }
+
+        }
+
+        private void ComboBox_SearchSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // stop drawing animation if it's drawings
+            stopDawingAnimations();
+            
+            canvascontroll.Invalidate();
+        }
+
+        private void ComboBox_StartLocationsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // stop drawing animation
+            stopDawingAnimations();
+
+            var comboBox = sender as ComboBox;
+            string value = comboBox.SelectedItem as string;
+            if (!string.IsNullOrEmpty(value))
+            {
+                // initialze the previouseNode
+                if (startLocationOfPreviousNode != null)
+                {
+                    startLocationOfPreviousNode.StartPoint = false;
+                }
+                startLocationOfPreviousNode = nodes.Find(n => n.NodeName == value);
+                // add logo to start location
+                sL = nodes.Find(n => n.NodeName == value);
+                sL.StartPoint = true;
+                // update the ui
+                canvascontroll.Invalidate();
+            }
+
+        }
+
+        private void ComboBox_GoolLocationSelectionChanged_1(object sender, SelectionChangedEventArgs e)
+        {
+            // stop drawing animation
+            stopDawingAnimations();
+
+            // Get The New Select Gool Location
+            var comboBox = sender as ComboBox;
+            string value = comboBox.SelectedItem as string;
+            
+            if (!string.IsNullOrEmpty(value))
+            {
+                // remove the Gool logo from the old Gool loaction
+                if (goolLocationOfPreviousNode != null)
+                {
+                    goolLocationOfPreviousNode.GoolPoint = false;
+                }
+
+                goolLocationOfPreviousNode = nodes.Find(n => n.NodeName == value);
+                gL = nodes.Find(n => n.NodeName == value);
+                gL.GoolPoint = true;
+                // update the ui
+                canvascontroll.Invalidate();
+            }
+        }
+
+        private void ComboBox_MapsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            drawingAnimation = false;
+            if (canvasWidth > 0 && SelectedMap != Maps[2])
+            {
+                AvaiableRoads.Clear();
+                nodes = null;
+                startLocationOfPreviousNode = null;
+                goolLocationOfPreviousNode = null;
+                sL = null;
+                gL = null;
+                if (SelectedMap == Maps[0])
+                {
+                    initializeMap1();
+                }
+                else if (SelectedMap == Maps[1])
+                {
+                    initializeMap2();
+                }
+                canvascontroll.Invalidate();
+            }
+        }
+
+        private void ComboBox_SpeedSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            string value = comboBox.SelectedItem as string;
+            if (value == SearchSpeed[0])
+            {
+                speed = 1000;
+            }
+            else if (value == SearchSpeed[1])
+            {
+                speed = 500;
+            }
+            else
+            {
+                speed = 250;
+            }
+        }
+
+        // update points after change the map
+        private void UpdatePoints()
+        {
+            StartLocations.Clear();
+            GoolLocations.Clear();
+            foreach (var item in nodes)
+            {
+                StartLocations.Add(item.NodeName);
+                GoolLocations.Add(item.NodeName);
+            }
+        }
+
+        // draw animation path
+        private async void DrawPath()
+        {
+            // note drawCorrectRoad = false;
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    for (int i = 0; i < DiscoverdRoad.Count; i++)
+                    {
+                        if (drawingAnimation)
+                        {
+                            Walks.Add(DiscoverdRoad[i].Node);
+                            await Task.Delay(speed);
+                            if (i != DiscoverdRoad.Count - 1 && DiscoverdRoad[i + 1].CurrectPath == true)
+                            {
+                                int count = i;
+                                while (DiscoverdRoad[count].CurrectPath == false)
+                                {
+                                    Walks.Remove(DiscoverdRoad[count].Node);
+                                    count--;
+                                }
+                            }
+                        }
+                    }
+                    Walks.Clear();
+                    drawCorrentRoad = true;
+                    canvascontroll.Invalidate();
+                });
+            }
+            catch
+            {
+
+            }
+        }
+
+        // stop drawing animation path
+        private void stopDawingAnimations()
+        {
+            drawingAnimation = false;
+            AvaiableRoads.Clear();
+            drawCorrentRoad = false;
         }
 
         private void initializeMap1()
         {
-            if (Nodes == null)
+            if (nodes == null)
             {
                 Node S = new Node() { NodeName = "S" };
                 Node A = new Node() { NodeName = "A" };
@@ -287,37 +471,37 @@ namespace Search
                 E.ConnectedNode = new List<Node>() { C };
                 G.ConnectedNode = new List<Node>() { D };
 
-                Nodes = new List<Node>() { S, A, B, C, D, E, G };
+                nodes = new List<Node>() { S, A, B, C, D, E, G };
                 UpdatePoints();
             }
             // S
-            Nodes[0].X = X_axis[1];
-            Nodes[0].Y = Y_axis[3];
+            nodes[0].X = xAxis[1];
+            nodes[0].Y = yAxis[3];
             // A
-            Nodes[1].X = X_axis[3];
-            Nodes[1].Y = Y_axis[2];
+            nodes[1].X = xAxis[3];
+            nodes[1].Y = yAxis[2];
             // B
-            Nodes[2].X = X_axis[4];
-            Nodes[2].Y = Y_axis[3];
+            nodes[2].X = xAxis[4];
+            nodes[2].Y = yAxis[3];
             // C
-            Nodes[3].X = X_axis[5];
-            Nodes[3].Y = Y_axis[1];
+            nodes[3].X = xAxis[5];
+            nodes[3].Y = yAxis[1];
             // D
-            Nodes[4].X = X_axis[6];
-            Nodes[4].Y = Y_axis[3];
+            nodes[4].X = xAxis[6];
+            nodes[4].Y = yAxis[3];
             // E
-            Nodes[5].X = X_axis[7];
-            Nodes[5].Y = Y_axis[1];
+            nodes[5].X = xAxis[7];
+            nodes[5].Y = yAxis[1];
             // G
-            Nodes[6].X = X_axis[7];
-            Nodes[6].Y = Y_axis[2];
+            nodes[6].X = xAxis[7];
+            nodes[6].Y = yAxis[2];
 
 
         }
 
         private void initializeMap2()
         {
-            if (Nodes == null)
+            if (nodes == null)
             {
                 #region 
                 Node A = new Node() { NodeName = "A" };
@@ -351,190 +535,52 @@ namespace Search
                 L.ConnectedNode = new List<Node>() { I, J, M };
                 M.ConnectedNode = new List<Node>() { L, N };
                 N.ConnectedNode = new List<Node>() { H, M };
-                Nodes = new List<Node>() { A, B, C, D, E, F, G, H, I, J, K, L, M, N };
+                nodes = new List<Node>() { A, B, C, D, E, F, G, H, I, J, K, L, M, N };
                 UpdatePoints();
                 #endregion
             }
             // A
-            Nodes[0].X = X_axis[0];
-            Nodes[0].Y = Y_axis[2];
+            nodes[0].X = xAxis[0];
+            nodes[0].Y = yAxis[2];
             // B
-            Nodes[1].X = X_axis[1];
-            Nodes[1].Y = Y_axis[1];
+            nodes[1].X = xAxis[1];
+            nodes[1].Y = yAxis[1];
             // C
-            Nodes[2].X = X_axis[1];
-            Nodes[2].Y = Y_axis[3];
+            nodes[2].X = xAxis[1];
+            nodes[2].Y = yAxis[3];
             // D
-            Nodes[3].X = X_axis[3];
-            Nodes[3].Y = Y_axis[0];
+            nodes[3].X = xAxis[3];
+            nodes[3].Y = yAxis[0];
             // E
-            Nodes[4].X = X_axis[2];
-            Nodes[4].Y = Y_axis[2];
+            nodes[4].X = xAxis[2];
+            nodes[4].Y = yAxis[2];
             // F
-            Nodes[5].X = X_axis[2];
-            Nodes[5].Y = Y_axis[1];
+            nodes[5].X = xAxis[2];
+            nodes[5].Y = yAxis[1];
             // G
-            Nodes[6].X = X_axis[4];
-            Nodes[6].Y = Y_axis[1];
+            nodes[6].X = xAxis[4];
+            nodes[6].Y = yAxis[1];
             // H
-            Nodes[7].X = X_axis[3];
-            Nodes[7].Y = Y_axis[4];
+            nodes[7].X = xAxis[3];
+            nodes[7].Y = yAxis[4];
             // I
-            Nodes[8].X = X_axis[6];
-            Nodes[8].Y = Y_axis[0];
+            nodes[8].X = xAxis[6];
+            nodes[8].Y = yAxis[0];
             // J
-            Nodes[9].X = X_axis[5];
-            Nodes[9].Y = Y_axis[2];
+            nodes[9].X = xAxis[5];
+            nodes[9].Y = yAxis[2];
             // K
-            Nodes[10].X = X_axis[4];
-            Nodes[10].Y = Y_axis[3];
+            nodes[10].X = xAxis[4];
+            nodes[10].Y = yAxis[3];
             // L
-            Nodes[11].X = X_axis[7];
-            Nodes[11].Y = Y_axis[1];
+            nodes[11].X = xAxis[7];
+            nodes[11].Y = yAxis[1];
             // M
-            Nodes[12].X = X_axis[8];
-            Nodes[12].Y = Y_axis[2];
+            nodes[12].X = xAxis[8];
+            nodes[12].Y = yAxis[2];
             // N
-            Nodes[13].X = X_axis[6];
-            Nodes[13].Y = Y_axis[3];
-        }
-
-        private void ComboBox_StartLocationsSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var comboBox = sender as ComboBox;
-            string value = comboBox.SelectedItem as string;
-            drawCorrentRoad = false;
-            if (!string.IsNullOrEmpty(value))
-            {
-                // initialze the previouseNode
-                if (StartLocationOfPreviousNode != null)
-                {
-                    StartLocationOfPreviousNode.StartPoint = false;
-                }
-                StartLocationOfPreviousNode = Nodes.Find(n => n.NodeName == value);
-                // add logo to start location
-                SL = Nodes.Find(n => n.NodeName == value);
-                SL.StartPoint = true;
-                // update the ui
-                canvascontroll.Invalidate();
-            }
-
-        }
-
-        private void ComboBox_GoolLocationSelectionChanged_1(object sender, SelectionChangedEventArgs e)
-        {
-            // Get The New Select Gool Location
-            var comboBox = sender as ComboBox;
-            string value = comboBox.SelectedItem as string;
-            drawCorrentRoad = false;
-            if (!string.IsNullOrEmpty(value))
-            {
-                // remove the Gool logo from the old Gool loaction
-                if (GoolLocationOfPreviousNode != null)
-                {
-                    GoolLocationOfPreviousNode.GoolPoint = false;
-                }
-
-                GoolLocationOfPreviousNode = Nodes.Find(n => n.NodeName == value);
-                GL = Nodes.Find(n => n.NodeName == value);
-                GL.GoolPoint = true;
-                // update the ui
-                canvascontroll.Invalidate();
-            }
-        }
-
-        private void ComboBox_SearchSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            canvascontroll.Invalidate();
-        }
-
-        private void ComboBox_MapsSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (CanvasWidth > 0 && SelectedMap != Maps[2])
-            {
-                AvaiableRoads.Clear();
-                Nodes = null;
-                StartLocationOfPreviousNode = null;
-                GoolLocationOfPreviousNode = null;
-                SL = null;
-                GL = null;
-                if (SelectedMap == Maps[0])
-                {
-                    initializeMap1();
-                }
-                else if (SelectedMap == Maps[1])
-                {
-                    initializeMap2();
-                }
-                canvascontroll.Invalidate();
-            }
-        }
-
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var comboBox = sender as ComboBox;
-            string value = comboBox.SelectedItem as string;
-            if(value == SearchSpeed[0])
-            {
-                speed = 1000;
-            }
-            else if(value == SearchSpeed[1])
-            {
-                speed = 500;
-            }
-            else
-            {
-                speed = 250;
-            }
-        }
-
-        private void UpdatePoints()
-        {
-            StartLocations.Clear();
-            GoolLocations.Clear();
-            foreach (var item in Nodes)
-            {
-                StartLocations.Add(item.NodeName);
-                GoolLocations.Add(item.NodeName);
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            animationPlay = true;
-            
-        }
-
-        private async void DrawPath()
-        {
-            // note drawCorrectRoad = false;
-            try
-            {
-                await Task.Run(async () =>
-                {
-                    for (int i = 0; i < DiscoverdRoad.Count; i++)
-                    {
-                        Walks.Add(DiscoverdRoad[i].Node);
-                        await Task.Delay(speed);
-                        if(i != DiscoverdRoad.Count - 1 && DiscoverdRoad[i+1].CurrectPath == true)
-                        {
-                            int count = i;
-                            while (DiscoverdRoad[count].CurrectPath == false)
-                            {
-                                Walks.Remove(DiscoverdRoad[count].Node);
-                                count--;
-                            }
-                        }
-                    }
-                    Walks.Clear();
-                    drawCorrentRoad = true;
-                    canvascontroll.Invalidate();
-                });
-            }
-            catch
-            {
-
-            }
+            nodes[13].X = xAxis[6];
+            nodes[13].Y = yAxis[3];
         }
 
         #region Burning Text
@@ -544,7 +590,7 @@ namespace Search
         Transform2DEffect flameAnimation;
         Transform2DEffect flamePosition;
 
-        string text, newText;
+        string burningText;
         float fontSize = 30.0f;
 
 
@@ -555,7 +601,6 @@ namespace Search
         {
             const float maxFontSize = 72;
             const float scaleFactor = 24;
-
             return Math.Min((float)displaySize.Width / scaleFactor, maxFontSize);
         }
         /// <summary>
@@ -571,7 +616,7 @@ namespace Search
                 ds.Clear(Color.FromArgb(0, 0, 0, 0));
 
                 ds.DrawText(
-                    text,
+                    burningText,
                     0,
                     0,
                     Colors.SteelBlue,
@@ -600,29 +645,7 @@ namespace Search
 
             flamePosition.TransformMatrix = Matrix3x2.CreateScale(1, 2, centerPoint);
         }
-
-        private void CanvasAnimatedControl_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
-        {
-            if (animationPlay)
-            {
-                var ds = args.DrawingSession;
-                var newFontSize = GetFontSize(sender.Size);
-                if (newText != text || newFontSize != fontSize)
-                {
-                    text = newText;
-                    fontSize = newFontSize;
-                    SetupText(sender);
-                };
-                ConfigureEffect(args.Timing);
-                ds.DrawImage(composite, width, height - startHeight * 2);
-                //animationPlay = false;
-            }
-            else
-                animationPlay = true;
-        }
-
         
-
         // Alternative entrypoint for use by AppIconGenerator.
         private void CreateFlameEffect()
         {
