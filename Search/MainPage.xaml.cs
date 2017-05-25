@@ -79,7 +79,7 @@ namespace Search
 
         private void Canvas_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
-            if (AvaiableRoads.Count > 0)
+            if (AvaiableRoads.Count > 0 )
             {
                 for (int i = 0; i < Walks.Count - 1; i++)
                 {
@@ -157,9 +157,8 @@ namespace Search
 
         private void Search_Button_Click(object sender, RoutedEventArgs e)
         {
-            // stop drawing animation
             stopDawingAnimations();
-
+            
             if (sL != null && gL != null)
             {
                 AvaiableRoads.Clear();
@@ -174,6 +173,7 @@ namespace Search
                     DepthFirstSearch(road);
                 else if (SelectedSearchType == SearchTypes[1])
                     BrithishMuseum(road);
+                drawingAnimation = true;
             }
             if (AvaiableRoads.Count > 0)
             {
@@ -188,8 +188,7 @@ namespace Search
                     }
                 }
             }
-
-            // draw animation path
+            
             DrawPath();
         }
 
@@ -243,57 +242,7 @@ namespace Search
 
         private void BrithishMuseum(Road road)
         {
-            Path path = new Path();
-            path.Node = road.HeadNode;
-            DiscoverdRoad.Add(path);
-            List<Node> extendednodes = new List<Node>();
-            foreach (var node in road.PossibleRoad)
-            {
-                extendednodes.Add(node);
-            }
-            for (int i = 0; i < extendednodes.Count; i++)
-            {
-                if (extendednodes[i].GoolPoint == true)
-                {
-
-                }
-            }
-            if (road.HeadNode.GoolPoint)
-            {
-                road.PassedRoad.Insert(0, road.HeadNode);
-                AvaiableRoads.Add(road);
-                return;
-            }
-            else
-            {
-                while (road.PossibleRoad.Count != 0)
-                {
-                    road.HeadNode = road.PossibleRoad.Dequeue();
-                    BrithishMuseum(road);
-                }
-                if (AvaiableRoads.Count <= 0)
-                {
-                    Road extendedRoad = new Road();
-                    extendedRoad.PassedRoad = new List<Node>();
-                    extendedRoad.PassedRoad.Add(road.HeadNode);
-                    foreach (var item in road.PassedRoad)
-                        extendedRoad.PassedRoad.Add(item);
-                    foreach (var item in extendedRoad.HeadNode.ConnectedNode)
-                    {
-                        bool passed = false;
-                        foreach (var pastroad in extendedRoad.PassedRoad)
-                        {
-                            if (pastroad.NodeName == item.NodeName)
-                                passed = true;
-                        }
-                        if (!passed)
-                            extendedRoad.PossibleRoad.Enqueue(item);
-                    }
-
-                }
-
-            }
-
+            
         }
 
         private void ComboBox_SearchSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -445,8 +394,9 @@ namespace Search
         // stop drawing animation path
         private void stopDawingAnimations()
         {
-            drawingAnimation = false;
             AvaiableRoads.Clear();
+            DiscoverdRoad.Clear();
+            drawingAnimation = false;
             drawCorrentRoad = false;
         }
 
