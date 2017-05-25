@@ -9,21 +9,78 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveVisualStateGroup">
+                <VisualState x:Name="VisualStateNarrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource NarrowMinWidth}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!--  TODO: change properties for narrow view  -->
+                        <Setter Target="searchtype.(Grid.Row)" Value="0"/>
+                        <Setter Target="searchtype.(Grid.Column)" Value="0"/>
+                        <Setter Target="searchtype.(Grid.ColumnSpan)" Value="5"/>
+
+                        <Setter Target="startlocation.(Grid.Row)" Value="1"/>
+                        <Setter Target="startlocation.(Grid.Column)" Value="0"/>
+                        <Setter Target="startlocation.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="goollocation.(Grid.Row)" Value="1"/>
+                        <Setter Target="goollocation.(Grid.Column)" Value="2"/>
+                        <Setter Target="goollocation.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="maps.(Grid.Row)" Value="2"/>
+                        <Setter Target="maps.(Grid.Column)" Value="0"/>
+                        <Setter Target="maps.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="searchspeed.(Grid.Row)" Value="2"/>
+                        <Setter Target="searchspeed.(Grid.Column)" Value="2"/>
+                        <Setter Target="searchspeed.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="searchbutton.(Grid.Column)" Value="6"/>
+                        <Setter Target="searchbutton.(Grid.RowSpan)" Value="3"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="VisualStateNormal" >
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource NormalMinWidth}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!--TODO: change properties for normal view-->
+                        
+
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="VisualStateWide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource WideMinWidth}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        
+                        <!--TODO: change properties for wide view-->
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid>
+        <Grid x:Name="toolcontainer">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition x:Name="Column1"/>
+                <ColumnDefinition x:Name="Column2"/>
+                <ColumnDefinition x:Name="Column3"/>
+                <ColumnDefinition x:Name="Column4"/>
+                <ColumnDefinition x:Name="Column5" Width="Auto"/>
+                <ColumnDefinition x:Name="Column6" Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <StackPanel>
+            <StackPanel x:Name="searchtype">
                     <TextBlock Text="Search Type :" Margin="5"/>
                     <ComboBox VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
@@ -32,7 +89,7 @@
                           SelectedItem="{x:Bind SelectedSearchType,Mode=TwoWay}"
                           SelectionChanged="ComboBox_SearchSelectionChanged"/>
                 </StackPanel>
-            <StackPanel Grid.Column="1">
+            <StackPanel x:Name="startlocation" Grid.Column="1">
                     <TextBlock Text="Start Location :" Margin="5" />
                     <ComboBox VerticalAlignment="Center"
                       HorizontalAlignment="Stretch"
@@ -41,7 +98,7 @@
                       SelectedItem="{x:Bind StartLocation,Mode=TwoWay}"
                       SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
                 </StackPanel>
-            <StackPanel  Grid.Column="2">
+            <StackPanel x:Name="goollocation" Grid.Column="2" >
                     <TextBlock Text="Gool Location :" Margin="5" />
                     <ComboBox VerticalAlignment="Center"
                          HorizontalAlignment="Stretch"
@@ -50,7 +107,7 @@
                           SelectedItem="{x:Bind GoolLocation,Mode=TwoWay}" 
                           SelectionChanged="ComboBox_GoolLocationSelectionChanged_1"  />
                 </StackPanel>
-            <StackPanel Grid.Column="3">
+            <StackPanel x:Name="maps" Grid.Column="3">
                     <TextBlock Text="Maps :" Margin="5" HorizontalAlignment="Center"/>
                     <ComboBox VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
@@ -59,7 +116,7 @@
                           SelectedItem="{x:Bind SelectedMap, Mode=TwoWay}"
                           SelectionChanged="ComboBox_MapsSelectionChanged"/>
             </StackPanel>
-            <StackPanel  Grid.Column="4">
+            <StackPanel x:Name="searchspeed" Grid.Column="4">
                 <TextBlock Text="Speed :" Margin="5" 
                            HorizontalAlignment="Center"/>
                 <ComboBox VerticalAlignment="Center"
@@ -70,12 +127,13 @@
                           SelectionChanged="ComboBox_SpeedSelectionChanged"
                           />
             </StackPanel>
-            <Button Style="{StaticResource myButton}" FontFamily="Segoe MDL2 Assets"
-                        Grid.Column="5"
-                        Content="&#xE721;"
-                        Margin="5"
-                        VerticalAlignment="Stretch"        
-                        Click="Search_Button_Click"/>
+            <Button x:Name="searchbutton"
+                    Style="{StaticResource myButton}" FontFamily="Segoe MDL2 Assets"
+                    Grid.Column="5"
+                    Content="&#xE721;"
+                    Margin="5"
+                    VerticalAlignment="Stretch"        
+                    Click="Search_Button_Click"/>
         </Grid>
         
         <Grid x:Name="container"  Grid.Row="1" 

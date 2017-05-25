@@ -157,8 +157,8 @@ namespace Search
 
         private void Search_Button_Click(object sender, RoutedEventArgs e)
         {
-            stopDawingAnimations();
-            
+            //stopDawingAnimations();
+            DiscoverdRoad.Clear();
             if (sL != null && gL != null)
             {
                 AvaiableRoads.Clear();
@@ -194,8 +194,10 @@ namespace Search
 
         private void DepthFirstSearch(Road road)
         {
-            Path path = new Path();
-            path.Node = road.HeadNode;
+            Path path = new Path()
+            {
+                Node = road.HeadNode
+            };
             DiscoverdRoad.Add(path);
 
             if (road.HeadNode.GoolPoint)
@@ -240,6 +242,10 @@ namespace Search
             }
         }
 
+        private void DepthFirstSeaarch2(Road road)
+        {
+
+        }
         private void BrithishMuseum(Road road)
         {
             

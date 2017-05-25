@@ -14,7 +14,9 @@
         <SolidColorBrush x:Key="CustomSolidBrashColor">SteelBlue</SolidColorBrush>
         <SolidColorBrush x:Key="CustomBlueBrashColor">Blue</SolidColorBrush>
         <SolidColorBrush x:Key="CustomWhiteBrashColor">White</SolidColorBrush>
-        
+        <x:Double x:Key="NarrowMinWidth">0</x:Double>
+        <x:Double x:Key="NormalMinWidth">521</x:Double>
+        <x:Double x:Key="WideMinWidth">1200</x:Double>
         <Style TargetType="Button" x:Key="myButton">
             <Setter Property="Background" Value="White" />
             <Setter Property="Foreground" Value="{StaticResource CustomColor}"/>
