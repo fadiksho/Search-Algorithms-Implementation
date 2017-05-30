@@ -103,6 +103,7 @@
     <Compile Include="Model\Path.cs" />
     <Compile Include="Model\Node.cs" />
     <Compile Include="Model\Road.cs" />
+    <Compile Include="Model\Tracker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -17,6 +17,14 @@
         <x:Double x:Key="NarrowMinWidth">0</x:Double>
         <x:Double x:Key="NormalMinWidth">521</x:Double>
         <x:Double x:Key="WideMinWidth">1200</x:Double>
+        
+        <x:Double x:Key="SmallFontSize">10</x:Double>
+        <x:Double x:Key="MediomFontSize">15</x:Double>
+
+        <x:Double x:Key="SmallComboBoxHeight">25</x:Double>
+        <Thickness x:Key="SmallComboBoxMargin">5,2,5,2</Thickness>
+        <Thickness x:Key="SmallTextBlockMargin">5,2,5,2</Thickness>
+        
         <Style TargetType="Button" x:Key="myButton">
             <Setter Property="Background" Value="White" />
             <Setter Property="Foreground" Value="{StaticResource CustomColor}"/>

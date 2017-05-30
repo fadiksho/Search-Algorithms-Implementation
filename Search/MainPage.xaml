@@ -39,6 +39,40 @@
 
                         <Setter Target="searchbutton.(Grid.Column)" Value="6"/>
                         <Setter Target="searchbutton.(Grid.RowSpan)" Value="3"/>
+
+                        <Setter Target="searchType_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="startLocation_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="goolLoaction_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="maps_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="speed_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+
+                        <Setter Target="searchType_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="startLoaction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="goolLoction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="maps_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="speed_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        
+                        <Setter Target="searchType_ComboBox.Height" Value="{StaticResource SmallComboBoxHeight}"/>
+                        <Setter Target="startLoaction_ComboBox.Height" Value="{StaticResource SmallComboBoxHeight}"/>
+                        <Setter Target="goolLoction_ComboBox.Height" Value="{StaticResource SmallComboBoxHeight}"/>
+                        <Setter Target="maps_ComboBox.Height" Value="{StaticResource SmallComboBoxHeight}"/>
+                        <Setter Target="speed_ComboBox.Height" Value="{StaticResource SmallComboBoxHeight}"/>
+
+                        <!--searchbutton-->
+                        <Setter Target="searchType_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="startLoaction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="goolLoction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="maps_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="speed_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+
+                        <Setter Target="searchType_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="startLocation_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="goolLoaction_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="maps_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="speed_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+
+                        <Setter Target="searchbutton.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="VisualStateNormal" >
@@ -47,7 +81,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!--TODO: change properties for normal view-->
-                        
+
 
                     </VisualState.Setters>
                 </VisualState>
@@ -56,7 +90,6 @@
                         <AdaptiveTrigger MinWindowWidth="{StaticResource WideMinWidth}" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        
                         <!--TODO: change properties for wide view-->
                     </VisualState.Setters>
                 </VisualState>
@@ -81,35 +114,39 @@
                 <ColumnDefinition x:Name="Column6" Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel x:Name="searchtype">
-                    <TextBlock Text="Search Type :" Margin="5"/>
-                    <ComboBox VerticalAlignment="Center"
+                <TextBlock x:Name="searchType_TextBlock" Text="Search Type :" Margin="5" />
+                <ComboBox x:Name="searchType_ComboBox"
+                          VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
                           ItemsSource="{x:Bind SearchTypes}"
                           SelectedItem="{x:Bind SelectedSearchType,Mode=TwoWay}"
                           SelectionChanged="ComboBox_SearchSelectionChanged"/>
-                </StackPanel>
+            </StackPanel>
             <StackPanel x:Name="startlocation" Grid.Column="1">
-                    <TextBlock Text="Start Location :" Margin="5" />
-                    <ComboBox VerticalAlignment="Center"
-                      HorizontalAlignment="Stretch"
-                      Margin="5"
-                      ItemsSource="{x:Bind  StartLocations,Mode=OneWay}"
-                      SelectedItem="{x:Bind StartLocation,Mode=TwoWay}"
-                      SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
-                </StackPanel>
+                <TextBlock x:Name="startLocation_TextBlock" Text="Start Location :" Margin="5" />
+                <ComboBox x:Name="startLoaction_ComboBox"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5"
+                          ItemsSource="{x:Bind  StartLocations,Mode=OneWay}"
+                          SelectedItem="{x:Bind StartLocation,Mode=TwoWay}"
+                          SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
+            </StackPanel>
             <StackPanel x:Name="goollocation" Grid.Column="2" >
-                    <TextBlock Text="Gool Location :" Margin="5" />
-                    <ComboBox VerticalAlignment="Center"
-                         HorizontalAlignment="Stretch"
+                <TextBlock x:Name="goolLoaction_TextBlock" Text="Gool Location :" Margin="5" />
+                <ComboBox x:Name="goolLoction_ComboBox"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
                           Margin="5"
                           ItemsSource="{x:Bind GoolLocations,Mode=OneWay}"
                           SelectedItem="{x:Bind GoolLocation,Mode=TwoWay}" 
                           SelectionChanged="ComboBox_GoolLocationSelectionChanged_1"  />
-                </StackPanel>
+            </StackPanel>
             <StackPanel x:Name="maps" Grid.Column="3">
-                    <TextBlock Text="Maps :" Margin="5" HorizontalAlignment="Center"/>
-                    <ComboBox VerticalAlignment="Center"
+                <TextBlock x:Name="maps_TextBlock" Text="Maps :" Margin="5" HorizontalAlignment="Center"/>
+                <ComboBox x:Name="maps_ComboBox"
+                          VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
                           ItemsSource="{x:Bind Maps}"
@@ -117,9 +154,10 @@
                           SelectionChanged="ComboBox_MapsSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="searchspeed" Grid.Column="4">
-                <TextBlock Text="Speed :" Margin="5" 
+                <TextBlock x:Name="speed_TextBlock" Text="Speed :" Margin="5" 
                            HorizontalAlignment="Center"/>
-                <ComboBox VerticalAlignment="Center"
+                <ComboBox x:Name="speed_ComboBox"
+                          VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
                           ItemsSource="{x:Bind SearchSpeed}"
@@ -135,14 +173,14 @@
                     VerticalAlignment="Stretch"        
                     Click="Search_Button_Click"/>
         </Grid>
-        
+
         <Grid x:Name="container"  Grid.Row="1" 
               SizeChanged="container_SizeChanged">
             <canvas:CanvasControl x:Name="canvascontroll" 
                                   Draw="canvascontroll_Draw"
                                   Canvas.ZIndex="2"/>
             <canvas:CanvasAnimatedControl x:Name="canvasanimate" 
-                                          Draw="Canvas_Draw" />
+                                          Draw="CanvasAnimatedControl_Draw" />
         </Grid>
     </Grid>
 </Page>

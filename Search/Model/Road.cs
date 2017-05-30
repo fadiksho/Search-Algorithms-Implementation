@@ -9,9 +9,8 @@ namespace Search.Model
     public class Road
     {
         public Node HeadNode { get; set; }
-        public Node SourceNode { get; set; }
-        public List<Node> Branches { get; set; }
-        public List<Node> PassedRoad { get; set; }
-        public Queue<Node> PossibleRoad { get; set; }
+        public List<Node> PassedRoad { get; set; } = new List<Node>();
+        public Queue<Node> PossibleRoad { get; set; } = new Queue<Node>();
+        public List<Road> mypaths { get; set; } = new List<Road>();
     }
 }
