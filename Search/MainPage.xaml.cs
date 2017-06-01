@@ -4,17 +4,17 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Search.Model;
+using Search.Utility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Numerics;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Threading;
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace Search
@@ -24,10 +24,13 @@ namespace Search
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        public static float canvasWidth, canvasHeight, scaleWidth, scaleHeight;
+        public static Rect bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+
         #region Binding Propery
 
         public ObservableCollection<string> SearchTypes { get; set; } =
-            new ObservableCollection<string> { "DEPTH FIRST", "British MUSEUM", "DEPTH FIRST WITH FILTER" };
+            new ObservableCollection<string> { "DEPTH FIRST", "BREADTH FIRST", "DEPTH FIRST WITH FILTER" };
         public ObservableCollection<string> StartLocations { get; set; }
             = new ObservableCollection<string>();
         public ObservableCollection<string> GoolLocations { get; set; }
@@ -41,19 +44,22 @@ namespace Search
         public string GoolLocation { get; set; }
         public string SelectedMap { get; set; }
         public string SelectedSearchSpeed { get; set; }
-        
+
         #endregion
 
         #region feilds
 
         int speed, treePathCount, treePathChildCount;
-        float canvasWidth, canvasHeight, startWidth, startHeight, width, height, circleRadius;
+        float startWidth, startHeight, width, height, circleRadius, widthOnTen, widthOnFive, widthOnTwo, heightOnTow, heightOnFour;
+        
         float[] xAxis, yAxis;
         List<Node> nodes;
         Node sL, gL, startLocationOfPreviousNode, goolLocationOfPreviousNode;
         List<Road> AvaiableRoads { get; set; } = new List<Road>();
         List<List<Node>> MySearchPath { get; set; } = new List<List<Node>>();
         List<Node> Walks { get; set; } = new List<Node>();
+        List<Node> PreviousWalks { get; set; } = new List<Node>();
+
         DispatcherTimer SearchSpeedTick = new DispatcherTimer();
         bool drawPath, drawCorrentRoad;
 
@@ -69,9 +75,9 @@ namespace Search
             CreateFlameEffect();
             SearchSpeedTick.Tick += SearchSpeedTick_Tick;
             SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, 500);
-        }
 
-        
+
+        }
 
         private void CanvasAnimatedControl_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
@@ -84,6 +90,7 @@ namespace Search
 
         private void canvascontroll_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
+
             // Draw the Map Path
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -131,9 +138,8 @@ namespace Search
                     args.DrawingSession.DrawCircle(nodes[i].X, nodes[i].Y, circleRadius, Colors.LightGreen, circleRadius / 4);
                 }
             }
-            
-        }
 
+        }
 
         private void container_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -143,20 +149,23 @@ namespace Search
             canvasHeight = (float)container.ActualHeight;
             startHeight = canvasHeight / 20;
             height = canvasHeight - startHeight;
-            xAxis = new float[10] { startWidth, width / 5, 3 * width / 10, 2 * width / 5, width / 2, 3 * width / 5, 7 * width / 10, 4 * width / 5, 9 * width / 10, width };
-            yAxis = new float[5] { startHeight, height / 4, height / 2, 3 * height / 4, height };
-            //fontSize = circleRadius;
+            widthOnTen = width / 10;
+            widthOnFive = width / 5;
+            widthOnTwo = width / 2;
+            heightOnFour = height / 4;
+            heightOnTow = height / 2;
+
+            xAxis = new float[10] { startWidth, widthOnFive, 3 * widthOnTen, 2 * widthOnFive , widthOnTwo, 3 * widthOnFive, 7 * widthOnTen, 4 * widthOnFive, 9 * widthOnTen, width };
+            yAxis = new float[5] { startHeight, heightOnFour, heightOnTow, 3 * heightOnFour, height };
+            
             if (canvasHeight > canvasWidth)
             {
-                circleRadius = canvasWidth / 25;
+                circleRadius = canvasWidth / 30;
             }
             else
             {
-                
-                circleRadius = canvasHeight / 25;
+                circleRadius = canvasHeight / 30;
             }
-            
-            
             if (SelectedMap == Maps[0])
             {
                 initializeMap1();
@@ -170,27 +179,45 @@ namespace Search
         private void Search_Button_Click(object sender, RoutedEventArgs e)
         {
             #region
-            
+
             if (sL != null && gL != null)
             {
                 StopAnimation();
-                Road road = new Road() { HeadNode = sL };
+                Road road = new Road() { HeadNode = sL, PassedRoad = new List<Node>() { sL } };
+
                 foreach (var item in road.HeadNode.ConnectedNode)
                 {
-                    road.PossibleRoad.Enqueue(item);
+                    road.PossibleNodes.Enqueue(item);
                 }
                 if (SelectedSearchType == SearchTypes[0])
                 {
+                    //PassedNodes.Add(sL);
                     DepthFirstSearch(road);
-                    DrawPath();
-                    SearchSpeedTick.Start();
-                    
                 }
                 else if (SelectedSearchType == SearchTypes[1])
-                    BrithishMuseum(road);
-                
+                {
+                    if (sL.NodeName != gL.NodeName)
+                    {
+                        foreach (var possiblenode in road.PossibleNodes)
+                        {
+                            Road extendedRoad = new Road();
+                            extendedRoad.HeadNode = possiblenode;
+                            foreach (var passed in road.PassedRoad)
+                            {
+                                extendedRoad.PassedRoad.Add(passed);
+                            }
+                            extendedRoad.PassedRoad.Insert(0, possiblenode);
+                            road.PossibleRoads.Add(extendedRoad);
+                        }
+                        BreadthFirst(road);
+                    }
+                }
+
+                DrawPath();
+                SearchSpeedTick.Start();
+
             }
-            
+
             #endregion
         }
 
@@ -204,7 +231,7 @@ namespace Search
                 MySearchPath.Add(road.PassedRoad);
                 AvaiableRoads.Add(road);
             }
-            else if (road.PossibleRoad.Count <= 0)
+            else if (road.PossibleNodes.Count <= 0)
             {
                 road.PassedRoad.Insert(0, road.HeadNode);
                 MySearchPath.Add(road.PassedRoad);
@@ -216,7 +243,7 @@ namespace Search
                 // check if we already find one path if we do roll back
                 if (AvaiableRoads.Count <= 0)
                 {
-                    while (road.PossibleRoad.Count != 0 && AvaiableRoads.Count <= 0)
+                    while (road.PossibleNodes.Count != 0 && AvaiableRoads.Count <= 0)
                     {
                         // if not extend the node
                         Road extendedRoad = new Road();
@@ -224,7 +251,7 @@ namespace Search
                         foreach (var item in road.PassedRoad)
                             extendedRoad.PassedRoad.Add(item);
 
-                        extendedRoad.HeadNode = road.PossibleRoad.Dequeue();
+                        extendedRoad.HeadNode = road.PossibleNodes.Dequeue();
 
                         // add the possible road for the extended node
                         foreach (var item in extendedRoad.HeadNode.ConnectedNode)
@@ -236,7 +263,7 @@ namespace Search
                                     passed = true;
                             }
                             if (!passed)
-                                extendedRoad.PossibleRoad.Enqueue(item);
+                                extendedRoad.PossibleNodes.Enqueue(item);
                         }
                         DepthFirstSearch(extendedRoad);
                     }
@@ -245,8 +272,45 @@ namespace Search
             }
         }
 
-        private void BrithishMuseum(Road road)
+        private void BreadthFirst(Road road)
         {
+            // check the extended roads
+            foreach (var extendedroad in road.PossibleRoads)
+            {
+                MySearchPath.Add(extendedroad.PassedRoad);
+                if (extendedroad.HeadNode.GoolPoint)
+                {
+                    AvaiableRoads.Add(extendedroad);
+                    // return
+                }
+            }
+            if (AvaiableRoads.Count <= 0)
+            {
+                // extended the extended road 
+                Road extendedRoads = new Road();
+                foreach (var extendedRoad in road.PossibleRoads)
+                {
+                    foreach (var node in extendedRoad.HeadNode.ConnectedNode)
+                    {
+                        Road newExtendedRoad = new Road();
+                        newExtendedRoad.HeadNode = node;
+                        bool passed = false;
+                        foreach (var pastroad in extendedRoad.PassedRoad)
+                        {
+                            if (pastroad.NodeName == node.NodeName)
+                                passed = true;
+                            newExtendedRoad.PassedRoad.Add(pastroad);
+                        }
+                        if (!passed)
+                        {
+                            newExtendedRoad.PossibleNodes.Enqueue(node);
+                            newExtendedRoad.PassedRoad.Insert(0, node);
+                            extendedRoads.PossibleRoads.Add(newExtendedRoad);
+                        }
+                    }
+                }
+                BreadthFirst(extendedRoads);
+            }
 
         }
 
@@ -286,7 +350,7 @@ namespace Search
         {
             // stop drawing animation
             StopAnimation();
-            
+
             // Get The New Select Gool Location
             var comboBox = sender as ComboBox;
             string value = comboBox.SelectedItem as string;
@@ -302,7 +366,7 @@ namespace Search
                 goolLocationOfPreviousNode = nodes.Find(n => n.NodeName == value);
                 gL = nodes.Find(n => n.NodeName == value);
                 gL.GoolPoint = true;
-                
+
                 canvascontroll.Invalidate();
             }
         }
@@ -360,7 +424,7 @@ namespace Search
                 GoolLocations.Add(item.NodeName);
             }
         }
-        
+
         private void SearchSpeedTick_Tick(object sender, object e)
         {
             DrawPath();
@@ -370,14 +434,18 @@ namespace Search
         {
             if (treePathChildCount == -1)
             {
+                PreviousWalks.Clear();
+                PreviousWalks.AddRange(Walks);
                 Walks.Clear();
                 drawPath = true;
                 treePathCount += 1;
+
                 if (treePathCount == MySearchPath.Count)
                 {
                     drawCorrentRoad = true;
                     SearchSpeedTick.Stop();
                     treePathCount = 0;
+                    PreviousWalks.Clear();
                     canvascontroll.Invalidate();
                     return;
                 }
@@ -386,6 +454,30 @@ namespace Search
             {
                 treePathChildCount = MySearchPath[treePathCount].Count - 1;
                 drawPath = false;
+                if (PreviousWalks.Count > 1)
+                {
+                    int fromEndCounter = 0;
+                    if (treePathChildCount > PreviousWalks.Count)
+                        fromEndCounter = PreviousWalks.Count;
+                    else
+                        fromEndCounter = treePathChildCount;
+
+                    int fromStartCounter = 0;
+                    for (int i = fromEndCounter; i > 0; i--)
+                    {
+                        if(MySearchPath[treePathCount][i].NodeName == PreviousWalks[fromStartCounter].NodeName)
+                        {
+                            Walks.Add(PreviousWalks[fromStartCounter]);
+                            treePathChildCount -= 1;
+                        }
+                        else
+                            break;
+
+                        fromStartCounter++;
+                    }
+                    fromStartCounter = 0;
+                }
+
             }
             if (treePathCount != MySearchPath.Count && treePathChildCount != -1)
             {
@@ -407,6 +499,7 @@ namespace Search
             MySearchPath.Clear();
             canvascontroll.Invalidate();
         }
+
         private void initializeMap1()
         {
             if (nodes == null)
@@ -454,6 +547,11 @@ namespace Search
             nodes[6].Y = yAxis[2];
 
 
+        }
+
+        private void canvascontroll_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
+        {
+            //args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
         }
 
         private void initializeMap2()
@@ -687,6 +785,6 @@ namespace Search
         }
         #endregion
 
-        
+
     }
 }

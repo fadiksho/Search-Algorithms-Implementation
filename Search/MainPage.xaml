@@ -8,7 +8,10 @@
     xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
+        <Grid.Background>
+            <ImageBrush Stretch="Fill" Opacity="0.8" ImageSource="Assets/Images/earth1280x640.jpg"/>
+        </Grid.Background>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="AdaptiveVisualStateGroup">
                 <VisualState x:Name="VisualStateNarrow">
@@ -95,11 +98,12 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
+        
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid x:Name="toolcontainer">
+        <Grid x:Name="toolcontainer" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -114,8 +118,9 @@
                 <ColumnDefinition x:Name="Column6" Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel x:Name="searchtype">
-                <TextBlock x:Name="searchType_TextBlock" Text="Search Type :" Margin="5" />
+                <TextBlock x:Name="searchType_TextBlock" Text="Search Type :" Margin="5" Foreground="{StaticResource CustomWhiteBrashColor}"/>
                 <ComboBox x:Name="searchType_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
@@ -124,8 +129,9 @@
                           SelectionChanged="ComboBox_SearchSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="startlocation" Grid.Column="1">
-                <TextBlock x:Name="startLocation_TextBlock" Text="Start Location :" Margin="5" />
+                <TextBlock x:Name="startLocation_TextBlock" Text="Start Location :" Margin="5"  Foreground="{StaticResource CustomWhiteBrashColor}"/>
                 <ComboBox x:Name="startLoaction_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
@@ -134,8 +140,9 @@
                           SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="goollocation" Grid.Column="2" >
-                <TextBlock x:Name="goolLoaction_TextBlock" Text="Gool Location :" Margin="5" />
+                <TextBlock x:Name="goolLoaction_TextBlock" Text="Gool Location :" Margin="5"  Foreground="{StaticResource CustomWhiteBrashColor}"/>
                 <ComboBox x:Name="goolLoction_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
@@ -144,8 +151,9 @@
                           SelectionChanged="ComboBox_GoolLocationSelectionChanged_1"  />
             </StackPanel>
             <StackPanel x:Name="maps" Grid.Column="3">
-                <TextBlock x:Name="maps_TextBlock" Text="Maps :" Margin="5" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="maps_TextBlock" Text="Maps :" Margin="5" HorizontalAlignment="Center"  Foreground="{StaticResource CustomWhiteBrashColor}"/>
                 <ComboBox x:Name="maps_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
@@ -154,9 +162,10 @@
                           SelectionChanged="ComboBox_MapsSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="searchspeed" Grid.Column="4">
-                <TextBlock x:Name="speed_TextBlock" Text="Speed :" Margin="5" 
+                <TextBlock x:Name="speed_TextBlock" Text="Speed :" Margin="5"  Foreground="{StaticResource CustomWhiteBrashColor}"
                            HorizontalAlignment="Center"/>
                 <ComboBox x:Name="speed_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
@@ -166,10 +175,12 @@
                           />
             </StackPanel>
             <Button x:Name="searchbutton"
-                    Style="{StaticResource myButton}" FontFamily="Segoe MDL2 Assets"
+                    FontFamily="Segoe MDL2 Assets"
                     Grid.Column="5"
                     Content="&#xE721;"
                     Margin="5"
+                    Foreground="{StaticResource CustomWhiteBrashColor}"
+                    Style="{StaticResource GrayButton}"
                     VerticalAlignment="Stretch"        
                     Click="Search_Button_Click"/>
         </Grid>
@@ -178,6 +189,7 @@
               SizeChanged="container_SizeChanged">
             <canvas:CanvasControl x:Name="canvascontroll" 
                                   Draw="canvascontroll_Draw"
+                                  CreateResources="canvascontroll_CreateResources"
                                   Canvas.ZIndex="2"/>
             <canvas:CanvasAnimatedControl x:Name="canvasanimate" 
                                           Draw="CanvasAnimatedControl_Draw" />
