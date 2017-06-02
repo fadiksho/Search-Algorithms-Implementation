@@ -5,7 +5,6 @@ using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Search.Model;
 using Search.Utility;
-using Search.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,37 +25,58 @@ namespace Search
     public sealed partial class MainPage : Page
     {
         public static float canvasWidth, canvasHeight, scaleWidth, scaleHeight;
+        public static Rect bounds = ApplicationView.GetForCurrentView().VisibleBounds;
 
-        public SearchToolViewModel SearchTool { get; set; }
+        #region Binding Propery
+
+        public ObservableCollection<string> SearchTypes { get; set; } =
+            new ObservableCollection<string> { "DEPTH FIRST", "BREADTH FIRST", "DEPTH FIRST WITH FILTER" };
+        public ObservableCollection<string> StartLocations { get; set; }
+            = new ObservableCollection<string>();
+        public ObservableCollection<string> GoolLocations { get; set; }
+            = new ObservableCollection<string>();
+        public ObservableCollection<string> Maps { get; set; } =
+            new ObservableCollection<string>() { "SMALL", "MEDIUM", "LARGE" };
+        public ObservableCollection<string> SearchSpeed { get; set; } =
+            new ObservableCollection<string>() { "X1", "X2", "X4" };
+        public string SelectedSearchType { get; set; }
+        public string StartLocation { get; set; }
+        public string GoolLocation { get; set; }
+        public string SelectedMap { get; set; }
+        public string SelectedSearchSpeed { get; set; }
+
+        #endregion
 
         #region feilds
 
-        bool drawPath, drawCorrentRoad;
         int speed, treePathCount, treePathChildCount;
         float startWidth, startHeight, width, height, circleRadius, widthOnTen, widthOnFive, widthOnTwo, heightOnTow, heightOnFour;
+        
         float[] xAxis, yAxis;
-
-        Node sL, gL, startLocationOfPreviousNode, goolLocationOfPreviousNode;
         List<Node> nodes;
-        List<Node> Walks { get; set; } = new List<Node>();
-        List<Node> PreviousWalks { get; set; } = new List<Node>();
+        Node sL, gL, startLocationOfPreviousNode, goolLocationOfPreviousNode;
         List<Road> AvaiableRoads { get; set; } = new List<Road>();
         List<List<Node>> MySearchPath { get; set; } = new List<List<Node>>();
+        List<Node> Walks { get; set; } = new List<Node>();
+        List<Node> PreviousWalks { get; set; } = new List<Node>();
+
         DispatcherTimer SearchSpeedTick = new DispatcherTimer();
+        bool drawPath, drawCorrentRoad;
 
         #endregion
 
         public MainPage()
         {
             this.InitializeComponent();
-            SearchTool = new SearchToolViewModel("DEPTH FIRST", "SMALL", "X2");
-            
-            
-            burningText = "SEARCHING!";
+            SelectedSearchType = SearchTypes[0];
+            SelectedMap = Maps[0];
+            SelectedSearchSpeed = SearchSpeed[0];
+            burningText = "Cool!";
             CreateFlameEffect();
             SearchSpeedTick.Tick += SearchSpeedTick_Tick;
-            
-            
+            SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, 500);
+
+
         }
 
         private void CanvasAnimatedControl_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
@@ -146,11 +166,11 @@ namespace Search
             {
                 circleRadius = canvasHeight / 30;
             }
-            if (SearchTool.SelectedMap == SearchTool.Maps[0])
+            if (SelectedMap == Maps[0])
             {
                 initializeMap1();
             }
-            else if (SearchTool.SelectedMap == SearchTool.Maps[0])
+            else if (SelectedMap == Maps[1])
             {
                 initializeMap2();
             }
@@ -169,12 +189,12 @@ namespace Search
                 {
                     road.PossibleNodes.Enqueue(item);
                 }
-                if (SearchTool.SelectedSearchType == SearchTool.SearchTypes[0])
+                if (SelectedSearchType == SearchTypes[0])
                 {
                     //PassedNodes.Add(sL);
                     DepthFirstSearch(road);
                 }
-                else if (SearchTool.SelectedSearchType == SearchTool.SearchTypes[1])
+                else if (SelectedSearchType == SearchTypes[1])
                 {
                     if (sL.NodeName != gL.NodeName)
                     {
@@ -354,7 +374,7 @@ namespace Search
         private void ComboBox_MapsSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             StopAnimation();
-            if (canvasWidth > 0 && SearchTool.SelectedMap != SearchTool.Maps[2])
+            if (canvasWidth > 0 && SelectedMap != Maps[2])
             {
                 AvaiableRoads.Clear();
                 nodes = null;
@@ -362,11 +382,11 @@ namespace Search
                 goolLocationOfPreviousNode = null;
                 sL = null;
                 gL = null;
-                if (SearchTool.SelectedMap == SearchTool.Maps[0])
+                if (SelectedMap == Maps[0])
                 {
                     initializeMap1();
                 }
-                else if (SearchTool.SelectedMap == SearchTool.Maps[1])
+                else if (SelectedMap == Maps[1])
                 {
                     initializeMap2();
                 }
@@ -378,35 +398,33 @@ namespace Search
         {
             var comboBox = sender as ComboBox;
             string value = comboBox.SelectedItem as string;
-            if (value == SearchTool.SearchSpeed[0])
-            {
-                speed = 1000;
-            }
-            else if (value == SearchTool.SearchSpeed[1])
+            if (value == SearchSpeed[0])
             {
                 speed = 500;
             }
-            else
+            else if (value == SearchSpeed[1])
             {
                 speed = 250;
+            }
+            else
+            {
+                speed = 125;
             }
             SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, speed);
         }
 
-        /// <summary>
-        /// Update the Start/Gool point after the map changed
-        /// </summary>
+        // update points after change the map
         private void UpdatePoints()
         {
-            SearchTool.StartLocations.Clear();
-            SearchTool.GoolLocations.Clear();
+            StartLocations.Clear();
+            GoolLocations.Clear();
             foreach (var item in nodes)
             {
-                SearchTool.StartLocations.Add(item.NodeName);
-                SearchTool.GoolLocations.Add(item.NodeName);
+                StartLocations.Add(item.NodeName);
+                GoolLocations.Add(item.NodeName);
             }
         }
-        
+
         private void SearchSpeedTick_Tick(object sender, object e)
         {
             DrawPath();
@@ -421,8 +439,7 @@ namespace Search
                 Walks.Clear();
                 drawPath = true;
                 treePathCount += 1;
-                SearchTool.SearchedPathCount += 1;
-                
+
                 if (treePathCount == MySearchPath.Count)
                 {
                     drawCorrentRoad = true;
@@ -474,7 +491,6 @@ namespace Search
         {
             treePathCount = 0;
             treePathChildCount = 0;
-            SearchTool.SearchedPathCount = 0;
             drawPath = true;
             SearchSpeedTick.Stop();
             drawCorrentRoad = false;
@@ -532,7 +548,12 @@ namespace Search
 
 
         }
-        
+
+        private void canvascontroll_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
+        {
+            //args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
+        }
+
         private void initializeMap2()
         {
             if (nodes == null)
@@ -652,7 +673,7 @@ namespace Search
                     burningText,
                     0,
                     0,
-                    Colors.White,
+                    Colors.SteelBlue,
                     new CanvasTextFormat
                     {
                         FontFamily = "Segoe UI",
@@ -678,6 +699,7 @@ namespace Search
 
             flamePosition.TransformMatrix = Matrix3x2.CreateScale(1, 2, centerPoint);
         }
+
         // Alternative entrypoint for use by AppIconGenerator.
         private void CreateFlameEffect()
         {
@@ -763,10 +785,6 @@ namespace Search
         }
         #endregion
 
-        private void canvascontroll_CreateResources(CanvasControl sender, CanvasCreateResourcesEventArgs args)
-        {
-            //args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
-        }
 
     }
 }

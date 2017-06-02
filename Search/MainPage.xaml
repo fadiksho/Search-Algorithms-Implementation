@@ -124,8 +124,8 @@
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
-                          ItemsSource="{x:Bind SearchTool.SearchTypes}"
-                          SelectedItem="{x:Bind SearchTool.SelectedSearchType,Mode=TwoWay}"
+                          ItemsSource="{x:Bind SearchTypes}"
+                          SelectedItem="{x:Bind SelectedSearchType,Mode=TwoWay}"
                           SelectionChanged="ComboBox_SearchSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="startlocation" Grid.Column="1">
@@ -135,8 +135,8 @@
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
-                          ItemsSource="{x:Bind  SearchTool.StartLocations,Mode=OneWay}"
-                          SelectedItem="{x:Bind SearchTool.StartLocation,Mode=TwoWay}"
+                          ItemsSource="{x:Bind  StartLocations,Mode=OneWay}"
+                          SelectedItem="{x:Bind StartLocation,Mode=TwoWay}"
                           SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="goollocation" Grid.Column="2" >
@@ -146,8 +146,8 @@
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
-                          ItemsSource="{x:Bind SearchTool.GoolLocations,Mode=OneWay}"
-                          SelectedItem="{x:Bind SearchTool.GoolLocation,Mode=TwoWay}" 
+                          ItemsSource="{x:Bind GoolLocations,Mode=OneWay}"
+                          SelectedItem="{x:Bind GoolLocation,Mode=TwoWay}" 
                           SelectionChanged="ComboBox_GoolLocationSelectionChanged_1"  />
             </StackPanel>
             <StackPanel x:Name="maps" Grid.Column="3">
@@ -157,8 +157,8 @@
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
-                          ItemsSource="{x:Bind SearchTool.Maps}"
-                          SelectedItem="{x:Bind SearchTool.SelectedMap, Mode=TwoWay}"
+                          ItemsSource="{x:Bind Maps}"
+                          SelectedItem="{x:Bind SelectedMap, Mode=TwoWay}"
                           SelectionChanged="ComboBox_MapsSelectionChanged"/>
             </StackPanel>
             <StackPanel x:Name="searchspeed" Grid.Column="4">
@@ -169,8 +169,8 @@
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
                           Margin="5"
-                          ItemsSource="{x:Bind SearchTool.SearchSpeed}"
-                          SelectedItem="{x:Bind SearchTool.SelectedSearchSpeed, Mode=TwoWay}"
+                          ItemsSource="{x:Bind SearchSpeed}"
+                          SelectedItem="{x:Bind SelectedSearchSpeed, Mode=TwoWay}"
                           SelectionChanged="ComboBox_SpeedSelectionChanged"
                           />
             </StackPanel>
@@ -184,19 +184,7 @@
                     VerticalAlignment="Stretch"        
                     Click="Search_Button_Click"/>
         </Grid>
-        <Grid Grid.Row="1" >
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="Searched Path:" Foreground="{StaticResource CustomWhiteBrashColor}" Margin="5"/>
-            <TextBlock Text="{x:Bind SearchTool.SearchedPathCount, Mode=OneWay}" Grid.Column="1" Foreground="{StaticResource CustomWhiteBrashColor}" Margin="5"/>
-            
-        </Grid>
+
         <Grid x:Name="container"  Grid.Row="1" 
               SizeChanged="container_SizeChanged">
             <canvas:CanvasControl x:Name="canvascontroll" 
