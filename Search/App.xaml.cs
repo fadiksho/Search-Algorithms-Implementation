@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Search.Views;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -73,7 +74,7 @@ namespace Search
                     if (info.OperatingSystem == "WindowsPhone")
                         Windows.UI.ViewManagement.ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
 
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    rootFrame.Navigate(typeof(GraphSearchPage), e.Arguments);
                 }
                 // Ensure the current window is active
                 Window.Current.Activate();

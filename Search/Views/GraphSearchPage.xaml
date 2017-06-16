@@ -1,0 +1,256 @@
+﻿<Page
+    x:Class="Search.Views.GraphSearchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Search.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    mc:Ignorable="d">
+
+    <Grid>
+        <Grid.Background>
+            <ImageBrush Stretch="Fill" Opacity="0.8" ImageSource="../Assets/Images/earth1280x640.jpg"/>
+        </Grid.Background>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveVisualStateGroup">
+                <VisualState x:Name="VisualStateNarrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource NarrowMinWidth}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!--  TODO: change properties for narrow view  -->
+                        <Setter Target="searchtype.(Grid.Row)" Value="0"/>
+                        <Setter Target="searchtype.(Grid.Column)" Value="0"/>
+                        <Setter Target="searchtype.(Grid.ColumnSpan)" Value="5"/>
+
+                        <Setter Target="startlocation.(Grid.Row)" Value="1"/>
+                        <Setter Target="startlocation.(Grid.Column)" Value="0"/>
+                        <Setter Target="startlocation.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="goollocation.(Grid.Row)" Value="1"/>
+                        <Setter Target="goollocation.(Grid.Column)" Value="2"/>
+                        <Setter Target="goollocation.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="maps.(Grid.Row)" Value="2"/>
+                        <Setter Target="maps.(Grid.Column)" Value="0"/>
+                        <Setter Target="maps.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="searchspeed.(Grid.Row)" Value="2"/>
+                        <Setter Target="searchspeed.(Grid.Column)" Value="2"/>
+                        <Setter Target="searchspeed.(Grid.ColumnSpan)" Value="2"/>
+
+                        <Setter Target="searchbutton.(Grid.Column)" Value="6"/>
+                        <Setter Target="searchbutton.(Grid.RowSpan)" Value="3"/>
+
+                        <Setter Target="searchType_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="startLocation_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="goolLoaction_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="maps_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="speed_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+
+                        <Setter Target="searchType_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="startLoaction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="goolLoction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="maps_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <Setter Target="speed_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+
+                        <Setter Target="searchType_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
+                        <Setter Target="startLoaction_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
+                        <Setter Target="goolLoction_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
+                        <Setter Target="maps_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
+                        <Setter Target="speed_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
+
+                        <!--searchbutton-->
+                        <Setter Target="searchType_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="startLoaction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="goolLoction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="maps_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        <Setter Target="speed_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+
+                        <Setter Target="searchType_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="startLocation_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="goolLoaction_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="maps_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        <Setter Target="speed_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+
+                        <Setter Target="searchbutton.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+
+                        <!--<Setter Target="MapName_TextBox.Height" Value="{StaticResource SmallComboBoxHeight}"/>-->
+
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="VisualStateNormal" >
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource NormalMinWidth}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!--TODO: change properties for normal view-->
+
+
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="VisualStateWide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource WideMinWidth}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <!--TODO: change properties for wide view-->
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid x:Name="toolcontainer" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="Column1"/>
+                <ColumnDefinition x:Name="Column2"/>
+                <ColumnDefinition x:Name="Column3"/>
+                <ColumnDefinition x:Name="Column4"/>
+                <ColumnDefinition x:Name="Column5" Width="Auto"/>
+                <ColumnDefinition x:Name="Column6" Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="searchtype">
+                <TextBlock x:Name="searchType_TextBlock" Text="Search Type :" Margin="5"
+                           Foreground="{StaticResource CustomWhiteBrashColor}">
+
+                </TextBlock>
+                <ComboBox x:Name="searchType_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5"
+                          ItemsSource="{x:Bind SearchTool.SearchTypes}"
+                          SelectedItem="{x:Bind SearchTool.SelectedSearchType,Mode=TwoWay}"
+                          SelectionChanged="ComboBox_SearchSelectionChanged"/>
+            </StackPanel>
+            <StackPanel x:Name="startlocation" Grid.Column="1">
+                <TextBlock x:Name="startLocation_TextBlock" Text="Start Location :" Margin="5"  Foreground="{StaticResource CustomWhiteBrashColor}"/>
+                <ComboBox x:Name="startLoaction_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5"
+                          ItemsSource="{x:Bind  SearchTool.StartLocations,Mode=OneWay}"
+                          SelectedItem="{x:Bind SearchTool.StartLocation,Mode=TwoWay}"
+                          SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
+            </StackPanel>
+            <StackPanel x:Name="goollocation" Grid.Column="2" >
+                <TextBlock x:Name="goolLoaction_TextBlock" Text="Gool Location :" Margin="5"  Foreground="{StaticResource CustomWhiteBrashColor}"/>
+                <ComboBox x:Name="goolLoction_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5"
+                          ItemsSource="{x:Bind SearchTool.GoolLocations,Mode=OneWay}"
+                          SelectedItem="{x:Bind SearchTool.GoolLocation,Mode=TwoWay}" 
+                          SelectionChanged="ComboBox_GoolLocationSelectionChanged_1"  />
+            </StackPanel>
+            <StackPanel x:Name="maps" Grid.Column="3">
+                <TextBlock x:Name="maps_TextBlock" Text="Maps :" Margin="5" HorizontalAlignment="Center"  Foreground="{StaticResource CustomWhiteBrashColor}"/>
+                <ComboBox x:Name="maps_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5"
+                          ItemsSource="{x:Bind SearchTool.Maps}"
+                          SelectedItem="{x:Bind SearchTool.SelectedMap, Mode=TwoWay}"
+                          SelectionChanged="ComboBox_MapsSelectionChanged"/>
+            </StackPanel>
+            <StackPanel x:Name="searchspeed" Grid.Column="4">
+                <TextBlock x:Name="speed_TextBlock" Text="Speed :" Margin="5"  Foreground="{StaticResource CustomWhiteBrashColor}"
+                           HorizontalAlignment="Center"/>
+                <ComboBox x:Name="speed_ComboBox"
+                          Foreground="{StaticResource CustomWhiteBrashColor}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5"
+                          ItemsSource="{x:Bind SearchTool.SearchSpeed}"
+                          SelectedItem="{x:Bind SearchTool.SelectedSearchSpeed, Mode=TwoWay}"
+                          SelectionChanged="ComboBox_SpeedSelectionChanged"
+                          />
+            </StackPanel>
+            <Button x:Name="searchbutton"
+                    FontFamily="Segoe MDL2 Assets"
+                    Grid.Column="5"
+                    Content="&#xE721;"
+                    Margin="5"
+                    Foreground="{StaticResource CustomWhiteBrashColor}"
+                    Style="{StaticResource GrayButton}"
+                    VerticalAlignment="Stretch"        
+                    Click="Search_Button_Click"/>
+        </Grid>
+
+
+
+        <!--<Button Visibility="Collapsed" Grid.Row="1" Content="TREE" Foreground="White" Background="Gray"
+                    Click="Button_ClickAsync"/>-->
+
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Canvas.ZIndex="2">
+            <StackPanel Orientation="Horizontal" Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}">
+                <TextBlock Text="Searched Path:" Foreground="{StaticResource CustomWhiteBrashColor}" 
+                       Margin="5" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind SearchTool.SearchedPathCount, Mode=OneWay}"
+                       Foreground="{StaticResource CustomWhiteBrashColor}"
+                       Margin="5" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Visibility="{x:Bind SearchTool.ShowCustomMapTool, Mode=OneWay}">
+                <ToggleButton x:Name="ConnectNodes_Button"
+                          Grid.Column="3"
+                          IsChecked="{x:Bind SearchTool.ConnectingNodeTogleEnabled, Mode=TwoWay}"
+                          Click="ConnectNodes_Button_Click"
+                          Content="&#xEDAD;"
+                          Foreground="White"
+                          FontFamily="Segoe MDL2 Assets" />
+
+                <Button x:Name="RemoveNode_Button"
+                    Style="{StaticResource MapToolButtons}"
+                    Grid.Column="2"
+                    Content="&#xE107;"
+                    Click="RemoveNode_Button_Click"/>
+
+                <TextBox x:Name="MapName_TextBox"
+                     Style="{StaticResource MapToolTextBox}"
+                     Grid.Column="4"
+                     Text="{x:Bind SearchTool.NewMapNameTextBox, Mode=TwoWay}"
+                     PlaceholderText="Map Name"
+                         HeaderTemplate="{StaticResource MapName_TextBox_HeaderTemplate}"
+                     Margin="17,0,2,0">
+
+                </TextBox>
+                <Button x:Name="Save_Button"
+                    Grid.Column="5"
+                    Style="{StaticResource MapToolButtons}"
+                    Content="&#xE001;" 
+                    Click="Save_Button_Click" />
+                <!--<Button x:Name="Cancel_Button"
+                    Style="{StaticResource MapToolButtons}"
+                    Grid.Column="6"
+                    Content="&#xE10A;" />-->
+            </StackPanel>
+
+        </StackPanel>
+
+        <Grid x:Name="container"  Grid.Row="2"
+              SizeChanged="container_SizeChanged">
+            <canvas:CanvasControl x:Name="canvascontroll" 
+                                  Draw="canvascontroll_Draw"
+                                  IsTapEnabled="True" 
+                                  RightTapped="canvascontroll_RightTapped"
+                                  Tapped="canvascontroll_Tapped"
+                                  Canvas.ZIndex="2">
+
+            </canvas:CanvasControl>
+        </Grid>
+    </Grid>
+</Page>

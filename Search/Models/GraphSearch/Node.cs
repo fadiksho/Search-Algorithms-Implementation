@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Search.Model
+namespace Search.Models.GraphSearch
 {
     public class Node
     {
-        public float X { get; set; }
-        public float Y { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
         public List<Node> ConnectedNode { get; set; }
         public string NodeName { get; set; }
         public bool StartPoint { get; set; }

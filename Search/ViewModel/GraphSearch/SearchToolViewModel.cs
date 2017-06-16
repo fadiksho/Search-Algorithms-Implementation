@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Search.ViewModel
+namespace Search.ViewModel.GraphSearch
 {
     public class SearchToolViewModel : INotifyPropertyChanged
     {
@@ -17,6 +17,7 @@ namespace Search.ViewModel
             this.selectedMap = selectedMap;
             this.selectedSearchSpeed = selectedSearchSpeed;
         }
+
         private string selectedSearchType;
         public string SelectedSearchType
         {
@@ -102,6 +103,75 @@ namespace Search.ViewModel
             }
         }
 
+        private bool showMap;
+        public bool ShowMap
+        {
+            get { return showMap; }
+            set
+            {
+                showMap = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowDiagnostic
+        {
+            get { return !showCustomMapTool; }
+        }
+
+        private bool showCustomMapTool;
+        public bool ShowCustomMapTool
+        {
+            get { return showCustomMapTool; }
+            set
+            {
+                showCustomMapTool = value;
+                OnPropertyChanged();
+                OnPropertyChanged("ShowDiagnostic");
+            }
+        }
+
+        private bool connectingNodeTogleEnabled;
+        public bool ConnectingNodeTogleEnabled
+        {
+            get { return connectingNodeTogleEnabled; }
+            set
+            {
+                if(connectingNodeTogleEnabled != value)
+                {
+                    connectingNodeTogleEnabled = value;
+                    OnPropertyChanged();
+                }
+                
+            }
+        }
+
+        private bool deleteNodeButtonEnabled;
+        public bool DeleteNodeButtonEnabled
+        {
+            get { return deleteNodeButtonEnabled; }
+            set
+            {
+                deleteNodeButtonEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string newMapName;
+
+        public string NewMapNameTextBox
+        {
+            get { return newMapName; }
+            set
+            {
+                if(newMapName != value)
+                {
+                    newMapName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ObservableCollection<string> SearchTypes { get; set; } =
             new ObservableCollection<string> { "DEPTH FIRST", "BREADTH FIRST", "DEPTH FIRST WITH FILTER" };
         public ObservableCollection<string> StartLocations { get; set; }
@@ -109,7 +179,7 @@ namespace Search.ViewModel
         public ObservableCollection<string> GoolLocations { get; set; }
             = new ObservableCollection<string>();
         public ObservableCollection<string> Maps { get; set; } =
-            new ObservableCollection<string>() { "SMALL", "MEDIUM", "LARGE" };
+            new ObservableCollection<string>() { "SMALL", "LARGE", "CUSTOM" };
         public ObservableCollection<string> SearchSpeed { get; set; } =
             new ObservableCollection<string>() { "X1", "X2", "X4" };
         

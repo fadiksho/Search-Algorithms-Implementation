@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Search.Model
+namespace Search.Models.GraphSearch
 {
     public class Road
     {

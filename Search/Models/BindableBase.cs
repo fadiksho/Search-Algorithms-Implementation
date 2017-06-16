@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace Search.Model
+namespace Search.Models
 {
     public abstract class BindableBase : INotifyPropertyChanged
     {
