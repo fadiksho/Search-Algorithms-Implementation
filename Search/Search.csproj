@@ -20,7 +20,7 @@
     <PackageCertificateKeyFile>Search_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -110,14 +110,15 @@
     <Compile Include="TreeVisuals.xaml.cs">
       <DependentUpon>TreeVisuals.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utility\MaxStack.cs" />
+    <Compile Include="Utility\FloatingBoundary.cs" />
+    <Compile Include="Utility\FloatingContent.cs" />
     <Compile Include="ViewModel\GraphSearch\SearchToolViewModel.cs" />
     <Compile Include="Models\GraphSearch\Tracker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utility\Scalling.cs" />
     <Compile Include="Views\GraphSearchPage.xaml.cs">
       <DependentUpon>GraphSearchPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\GraphSearch\Map.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -126,7 +127,12 @@
     <None Include="Search_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\Images\Button-info-icon-48.png" />
+    <Content Include="Assets\Images\Button-info-icon.png" />
+    <Content Include="Assets\Images\Button-info-icon_24.png" />
     <Content Include="Assets\Images\earth1280x640.jpg" />
+    <Content Include="Assets\Images\tree-with-balls-on-the-top-of-the-branches.png" />
+    <Content Include="Assets\Images\tree.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />

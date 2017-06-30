@@ -10,38 +10,42 @@ namespace Search.Models.GraphSearch
     {
         private float m;
         private float b;
-        public Tuple<Node, Node> LineName { get; set; }
-        public Tuple<float, float> Point1 { get; set; }
-        public Tuple<float, float> Point2 { get; set; }
-        public bool IfPointOnTheLine(float x, float y, float linethicknes)
+        public Node Point1 { get; set; }
+        public Node Point2 { get; set; }
+        public bool IfPointOnTheLine(float x, float y, float linethicknes, float[] xAxis, float[] yAxis)
         {
-            float xSide = 0;
+            float xSide = x;
             float ySide = y;
 
-            bool XScope = (x >= Point1.Item1 && x <= Point2.Item1) || (x <= Point1.Item1 && x >= Point2.Item1);
-            bool YScope = (y >= Point1.Item2 && y <= Point2.Item2) || (y <= Point1.Item2 && y >= Point2.Item2);
+            // xAxis[Point1.X] = LineName.X.X
+            // yAxis[Point1.Y] = LineName.X.Y
+
+            // Point.X = LineName.X.X
+            // yAxis[Point1.Y] = LineName.X.Y
+            bool XScope = (x >= xAxis[Point1.X] && x <= xAxis[Point2.X]) || (x <= xAxis[Point1.X] && x >= xAxis[Point2.X]);
+            bool YScope = (y >= yAxis[Point1.Y] && y <= yAxis[Point2.Y]) || (y <= yAxis[Point1.Y] && y >= yAxis[Point2.Y]);
             bool MScope;
             // vertical line
-            if (Point1.Item1 == Point2.Item1)
+            if (xAxis[Point1.X] == xAxis[Point2.X])
             {
                 // xside = any x 
-                xSide = Point1.Item1;
+                xSide = xAxis[Point1.X];
                 MScope = x >= xSide - linethicknes && x <= xSide + linethicknes;
                 if(MScope && YScope)
                     return true;
             }
             // Horizontal line
-            else if (Point1.Item2 == Point2.Item2)
+            else if (yAxis[Point1.Y] == yAxis[Point2.Y])
             {
-                xSide = Point1.Item2;
+                xSide = yAxis[Point1.Y];
                 MScope = xSide + linethicknes > ySide && ySide > xSide - linethicknes;
                 if (MScope && XScope)
                     return true;
             }
             else
             {
-                m = ((Point1.Item2 - Point2.Item2) / (Point1.Item1 - Point2.Item1));
-                b = Point1.Item2 - (m * Point1.Item1);
+                m = ((yAxis[Point1.Y] - yAxis[Point2.Y]) / (xAxis[Point1.X] - xAxis[Point2.X]));
+                b = yAxis[Point1.Y] - (m * xAxis[Point1.X]);
                 xSide = (m * x) + b;
                 MScope = xSide + linethicknes > ySide && ySide > xSide - linethicknes;
                 if (MScope && XScope && YScope)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Search.Models.GraphSearch;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,7 +12,7 @@ namespace Search.ViewModel.GraphSearch
 {
     public class SearchToolViewModel : INotifyPropertyChanged
     {
-        public SearchToolViewModel(string selectedSearchType,string selectedMap, string selectedSearchSpeed)
+        public SearchToolViewModel(string selectedSearchType, string selectedSearchSpeed)
         {
             this.selectedSearchType = selectedSearchType;
             this.selectedMap = selectedMap;
@@ -63,8 +64,8 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private string selectedMap;
-        public string SelectedMap
+        private Map selectedMap;
+        public Map SelectedMap
         {
             get { return selectedMap; }
             set
@@ -178,8 +179,21 @@ namespace Search.ViewModel.GraphSearch
             = new ObservableCollection<string>();
         public ObservableCollection<string> GoolLocations { get; set; }
             = new ObservableCollection<string>();
-        public ObservableCollection<string> Maps { get; set; } =
-            new ObservableCollection<string>() { "SMALL", "LARGE", "CUSTOM" };
+
+        private ObservableCollection<Map> maps;
+        public ObservableCollection<Map> Maps
+        {
+            get
+            {
+                return maps;
+            }
+            set
+            {
+                maps = value;
+                OnPropertyChanged();
+            }
+        }
+
         public ObservableCollection<string> SearchSpeed { get; set; } =
             new ObservableCollection<string>() { "X1", "X2", "X4" };
         
