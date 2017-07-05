@@ -12,16 +12,12 @@ namespace Search.Models.GraphSearch
         private float b;
         public Node Point1 { get; set; }
         public Node Point2 { get; set; }
+
         public bool IfPointOnTheLine(float x, float y, float linethicknes, float[] xAxis, float[] yAxis)
         {
             float xSide = x;
             float ySide = y;
 
-            // xAxis[Point1.X] = LineName.X.X
-            // yAxis[Point1.Y] = LineName.X.Y
-
-            // Point.X = LineName.X.X
-            // yAxis[Point1.Y] = LineName.X.Y
             bool XScope = (x >= xAxis[Point1.X] && x <= xAxis[Point2.X]) || (x <= xAxis[Point1.X] && x >= xAxis[Point2.X]);
             bool YScope = (y >= yAxis[Point1.Y] && y <= yAxis[Point2.Y]) || (y <= yAxis[Point1.Y] && y >= yAxis[Point2.Y]);
             bool MScope;
@@ -31,7 +27,7 @@ namespace Search.Models.GraphSearch
                 // xside = any x 
                 xSide = xAxis[Point1.X];
                 MScope = x >= xSide - linethicknes && x <= xSide + linethicknes;
-                if(MScope && YScope)
+                if (MScope && YScope)
                     return true;
             }
             // Horizontal line
@@ -52,6 +48,21 @@ namespace Search.Models.GraphSearch
                     return true;
             }
             return false;
+        }
+        public float GetSlop(float[] xAxis, float[] yAxis)
+        {
+            if (xAxis[Point1.X] == xAxis[Point2.X])
+            {
+                return float.NaN;
+            }
+            else if(yAxis[Point1.Y] == yAxis[Point2.Y])
+            {
+                return 0;
+            }
+            else
+            {
+                return ((yAxis[Point1.Y] - yAxis[Point2.Y]) / (xAxis[Point1.X] - xAxis[Point2.X]));
+            }
         }
     }
 }

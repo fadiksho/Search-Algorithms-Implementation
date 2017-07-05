@@ -7,6 +7,7 @@ using Search.ViewModel.GraphSearch;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -29,40 +30,91 @@ namespace Search.Views
     /// </summary>
     public sealed partial class GraphSearchPage : Page
     {
-        public static float canvasWidth, canvasHeight;
-
         public SearchToolViewModel SearchTool { get; set; }
 
         #region feilds
 
-        bool drawPath, drawCorrentRoad;
-        int speed, treePathCount, treePathChildCount;
-        float blockWidth, blockHeight, circleRadius, canvasWidthMargin, canvasHeightMargin;
+        bool drawPath, drawCorrentRoad, drawAnimation;
+        int speed, treePathCount, treePathChildCount, newNodeNameCount;
+        float canvasWidth, canvasHeight, blockWidth, blockHeight, circleRadius, canvasWidthMargin, canvasHeightMargin;
         float[] xAxis, yAxis;
-        int newNodeNameCount = 0;
-        Node sL, gL, startLocationOfPreviousNode, goolLocationOfPreviousNode;
+
+        Node sL, gL;
         Node selectedNode, pSelectedNode;
         List<Node> nodes = new List<Node>();
         List<Map> JsonMaps;
         List<Node> availableNodeToConnect = new List<Node>();
-        List<Node> Walks { get; set; } = new List<Node>();
+
+
+        ObservableCollection<Road> CorrectPaths { get; set; } = new ObservableCollection<Road>();
+        ObservableCollection<List<Node>> SearchedPaths { get; set; } = new ObservableCollection<List<Node>>();
+        List<List<Node>> AnimationsWalks { get; set; } = new List<List<Node>>();
         HashSet<Node> PreviousWalks { get; set; } = new HashSet<Node>();
-        List<Road> AvaiableRoads { get; set; } = new List<Road>();
-        List<List<Node>> MySearchPath { get; set; } = new List<List<Node>>();
-        DispatcherTimer SearchSpeedTick = new DispatcherTimer();
+        List<Node> Walks { get; set; } = new List<Node>();
+
         List<string> letters;
         List<string> removedLetters = new List<string>();
         List<Line> Lines = new List<Line>();
-        Random rnd = new Random();
+
+        DispatcherTimer SearchSpeedTick = new DispatcherTimer();
 
         #endregion
 
         public GraphSearchPage()
         {
             this.InitializeComponent();
-            SearchTool = new SearchToolViewModel("DEPTH FIRST", "X2");
+            SearchTool = new SearchToolViewModel("DEPTH FIRST", "X1");
             SearchSpeedTick.Tick += SearchSpeedTick_Tick;
-            
+            SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, 1000);
+            SearchTool.animateMoveChanged += SearchTool_animateMoveChanged;
+            CorrectPaths.CollectionChanged += AvaiableRoads_CollectionChanged;
+            SearchedPaths.CollectionChanged += MySearchPath_CollectionChanged;
+        }
+
+        private void MySearchPath_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                PreviousWalks.Clear();
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                SearchTool.IsAnimationAvailable = true;
+            }
+        }
+
+        private void AvaiableRoads_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                SearchTool.FindedCorrectPath = true;
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                SearchedPaths.Clear();
+                AnimationsWalks.Clear();
+                Walks.Clear();
+            }
+        }
+
+        private void SearchTool_animateMoveChanged(object sender, int animateMoveNumber)
+        {
+            if (animateMoveNumber == 0)
+            {
+                SearchTool.PreviousAnimateButtonEnabled = false;
+            }
+            else if (SearchTool.AnimateMoveNumber >= AnimationsWalks.Count - 1)
+            {
+                SearchTool.NextAnimateButtonEnabled = false;
+                drawCorrentRoad = true;
+                stopAnimation();
+            }
+            else
+            {
+                SearchTool.PreviousAnimateButtonEnabled = true;
+                SearchTool.NextAnimateButtonEnabled = true;
+            }
+            canvascontroll.Invalidate();
         }
 
         private void canvascontroll_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -72,57 +124,68 @@ namespace Search.Views
             {
                 for (int j = 0; j < nodes[i].ConnectedNodes.Count; j++)
                 {
-                    args.DrawingSession.DrawLine(xAxis[nodes[i].X], yAxis[nodes[i].Y], xAxis[nodes[i].ConnectedNodes[j].X], yAxis[nodes[i].ConnectedNodes[j].Y], Colors.Gray, circleRadius / 10);
+                    args.DrawingSession.DrawLine(xAxis[nodes[i].X], yAxis[nodes[i].Y], xAxis[nodes[i].ConnectedNodes[j].X], yAxis[nodes[i].ConnectedNodes[j].Y], Colors.Gray, circleRadius / 8);
                 }
             }
             if (SearchTool.ShowMap)
             {
-
-                // Draw the Searching Path
                 var textformat = new CanvasTextFormat() { FontSize = circleRadius, WordWrapping = CanvasWordWrapping.NoWrap, FontFamily = "Arial" };
                 textformat.HorizontalAlignment = CanvasHorizontalAlignment.Center;
                 textformat.VerticalAlignment = CanvasVerticalAlignment.Center;
-                if (Walks.Count > 1)
-                {
-                    for (int i = 0; i < Walks.Count - 1; i++)
-                    {
-                        args.DrawingSession.DrawLine(xAxis[Walks[i].X], yAxis[Walks[i].Y], xAxis[Walks[i + 1].X], yAxis[Walks[i + 1].Y], Colors.Red, circleRadius / 10);
-                        args.DrawingSession.DrawText( (i + 1).ToString(), xAxis[Walks[i].X] + circleRadius + 3, yAxis[Walks[i].Y] - circleRadius - 3, Colors.White, textformat);
-                        if(i == Walks.Count - 2)
-                        {
-                            args.DrawingSession.DrawCircle(xAxis[Walks[i+1].X], yAxis[Walks[i + 1].Y], circleRadius, Colors.Green, circleRadius / 4);
-                            args.DrawingSession.DrawText((Walks.Count).ToString(), xAxis[Walks[i + 1].X] + circleRadius + 3, yAxis[Walks[i + 1].Y] - circleRadius - 3, Colors.White, textformat);
-                        }
-                    }
-                }
 
                 // Draw the Corrent Path
-                if (AvaiableRoads.Count > 0 && drawCorrentRoad)
+                if (SearchTool.FindedCorrectPath && drawCorrentRoad)
                 {
-                    for (int i = 1; i < AvaiableRoads[0].PassedRoad.Count; i++)
+                    for (int i = 1; i < CorrectPaths[0].PassedRoad.Count; i++)
                     {
-                        args.DrawingSession.DrawLine(xAxis[AvaiableRoads[0].PassedRoad[i].X], yAxis[AvaiableRoads[0].PassedRoad[i].Y],
-                        xAxis[AvaiableRoads[0].PassedRoad[i - 1].X], yAxis[AvaiableRoads[0].PassedRoad[i - 1].Y], Colors.LightGreen, circleRadius / 4);
+                        args.DrawingSession.DrawLine(xAxis[CorrectPaths[0].PassedRoad[i].X], yAxis[CorrectPaths[0].PassedRoad[i].Y],
+                        xAxis[CorrectPaths[0].PassedRoad[i - 1].X], yAxis[CorrectPaths[0].PassedRoad[i - 1].Y], Colors.Green, circleRadius / 4);
 
-                        args.DrawingSession.DrawText(i.ToString(), xAxis[AvaiableRoads[0].PassedRoad[i - 1].X] + circleRadius + 3, yAxis[AvaiableRoads[0].PassedRoad[i - 1].Y] - circleRadius - 3, Colors.White, textformat);
-                        if(i == AvaiableRoads[0].PassedRoad.Count - 1)
+                        if (!drawAnimation)
                         {
-                            args.DrawingSession.DrawText((i+1).ToString(), xAxis[AvaiableRoads[0].PassedRoad[i].X] + circleRadius + 3, yAxis[AvaiableRoads[0].PassedRoad[i].Y] - circleRadius - 3, Colors.White, textformat);
+                            args.DrawingSession.DrawText(i.ToString(), xAxis[CorrectPaths[0].PassedRoad[i - 1].X] + circleRadius + 3, yAxis[CorrectPaths[0].PassedRoad[i - 1].Y] - circleRadius - 3, Colors.White, textformat);
+                            if (i == CorrectPaths[0].PassedRoad.Count - 1)
+                            {
+                                args.DrawingSession.DrawText((i + 1).ToString(), xAxis[CorrectPaths[0].PassedRoad[i].X] + circleRadius + 3, yAxis[CorrectPaths[0].PassedRoad[i].Y] - circleRadius - 3, Colors.White, textformat);
+                            }
                         }
-
                     }
                 }
+
+                // Draw the Searching Path
+                if (SearchTool.IsAnimationAvailable && drawAnimation)
+                {
+                    for (int i = 0; i < AnimationsWalks[SearchTool.AnimateMoveNumber].Count - 1; i++)
+                    {
+
+                        if (i != AnimationsWalks[SearchTool.AnimateMoveNumber].Count - 2)
+                        {
+                            args.DrawingSession.DrawLine(xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X], yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y], xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].X], yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].Y], Colors.OrangeRed, circleRadius / 10);
+                        }
+                        else
+                        {
+                            args.DrawingSession.DrawLine(xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X], yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y], xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].X], yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].Y], Colors.Yellow, circleRadius / 10);
+                        }
+                        args.DrawingSession.DrawText((i + 1).ToString(), xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X] + circleRadius + 3, yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y] - circleRadius - 3, Colors.White, textformat);
+                        if (i == AnimationsWalks[SearchTool.AnimateMoveNumber].Count - 2)
+                        {
+                            args.DrawingSession.DrawCircle(xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].X], yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].Y], circleRadius, Colors.YellowGreen, circleRadius / 4);
+                            args.DrawingSession.DrawText((AnimationsWalks[SearchTool.AnimateMoveNumber].Count).ToString(), xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].X] + circleRadius + 3, yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i + 1].Y] - circleRadius - 3, Colors.White, textformat);
+                        }
+                    }
+                }
+
             }
             else
             {
                 // Draw the y/x axis
                 for (int i = 0; i < yAxis.Length; i++)
                 {
-                    args.DrawingSession.DrawLine(xAxis[0], yAxis[i], xAxis[xAxis.Length - 1], yAxis[i], Colors.Black);
+                    args.DrawingSession.DrawLine(xAxis[0], yAxis[i], xAxis[xAxis.Length - 1], yAxis[i], Colors.Black, circleRadius / 20);
                 }
                 for (int i = 0; i < xAxis.Length; i++)
                 {
-                    args.DrawingSession.DrawLine(xAxis[i], yAxis[0], xAxis[i], yAxis[yAxis.Length - 1], Colors.Black);
+                    args.DrawingSession.DrawLine(xAxis[i], yAxis[0], xAxis[i], yAxis[yAxis.Length - 1], Colors.Black, circleRadius / 20);
                 }
                 if (!SearchTool.ConnectingNodeTogleEnabled)
                 {
@@ -194,9 +257,9 @@ namespace Search.Views
             {
                 circleRadius = blockHeight / 5;
             }
-            
-            xAxis = new float[10] {canvasWidthMargin, blockWidth + canvasWidthMargin , (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin, (9 * blockWidth) + canvasWidthMargin };
-            yAxis = new float[5] { canvasHeightMargin, blockHeight + canvasHeightMargin , (2 * blockHeight) + canvasHeightMargin, (3 * blockHeight) + canvasHeightMargin, (4 * blockHeight) + canvasHeightMargin };
+
+            xAxis = new float[10] { canvasWidthMargin, blockWidth + canvasWidthMargin, (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin, (9 * blockWidth) + canvasWidthMargin };
+            yAxis = new float[5] { canvasHeightMargin, blockHeight + canvasHeightMargin, (2 * blockHeight) + canvasHeightMargin, (3 * blockHeight) + canvasHeightMargin, (4 * blockHeight) + canvasHeightMargin };
 
         }
 
@@ -205,7 +268,7 @@ namespace Search.Views
             #region
             if (sL != null && gL != null && sL != gL)
             {
-                StopAnimation();
+                ClearSearchAndAnimation();
                 Road road = new Road() { HeadNode = sL, PassedRoad = new List<Node>() { sL } };
                 //Firt all the connected Node are possible Roads
                 foreach (var connectedNode in road.HeadNode.ConnectedNodes)
@@ -216,8 +279,6 @@ namespace Search.Views
                 if (SearchTool.SelectedSearchType == SearchTool.SearchTypes[0])
                 {
                     DepthFirstSearch(road);
-                    
-                    Draw2();
                 }
                 // Breadth First Search
                 else if (SearchTool.SelectedSearchType == SearchTool.SearchTypes[1])
@@ -234,19 +295,13 @@ namespace Search.Views
                         road.PossibleRoads.Add(extendedRoad);
                     }
                     BreadthFirst(road);
-                    foreach (var path in MySearchPath)
-                    {
-                        foreach (var node in path)
-                        {
-                            Debug.Write(node.NodeName + " ");
-                        }
-                        Debug.WriteLine("");
-                    }
-
-                    Draw2();
                 }
-                
-                SearchSpeedTick.Start();
+
+                if (SearchTool.IsAnimationAvailable)
+                {
+                    BuildAnimationPaths();
+                    startAnimation();
+                }
             }
             #endregion
         }
@@ -255,33 +310,33 @@ namespace Search.Views
         {
             if (road.HeadNode.GoolPoint)
             {
-                AvaiableRoads.Add(road);
-                MySearchPath.Add(road.PassedRoad);
+                CorrectPaths.Add(road);
+                SearchedPaths.Add(road.PassedRoad);
                 return;
             }
             // mabe we dont need this one
             else if (road.PossibleNodes.Count <= 0)
             {
-                MySearchPath.Add(road.PassedRoad);
+                SearchedPaths.Add(road.PassedRoad);
                 return;
             }
             // if there is connected node
             else
             {
                 // check if we already find one path if we do roll back
-                if (AvaiableRoads.Count <= 0)
+                if (CorrectPaths.Count <= 0)
                 {
-                    while (road.PossibleNodes.Count != 0 && AvaiableRoads.Count <= 0)
+                    while (road.PossibleNodes.Count != 0 && CorrectPaths.Count <= 0)
                     {
                         // if not extend the node
                         Road extendedRoad = new Road();
-                        
+
                         foreach (var item in road.PassedRoad)
                             extendedRoad.PassedRoad.Add(item);
 
                         extendedRoad.HeadNode = road.PossibleNodes.Dequeue();
                         extendedRoad.PassedRoad.Add(extendedRoad.HeadNode);
-                        
+
                         // add the possible road for the extended node
                         foreach (var item in extendedRoad.HeadNode.ConnectedNodes)
                         {
@@ -303,19 +358,19 @@ namespace Search.Views
 
         private void BreadthFirst(Road road)
         {
-            if(road.PossibleRoads.Count > 0)
+            if (road.PossibleRoads.Count > 0)
             {
                 // check the extended roads
                 foreach (var extendedroad in road.PossibleRoads)
                 {
-                    MySearchPath.Add(extendedroad.PassedRoad);
+                    SearchedPaths.Add(extendedroad.PassedRoad);
                     if (extendedroad.HeadNode.GoolPoint)
                     {
-                        AvaiableRoads.Add(extendedroad);
+                        CorrectPaths.Add(extendedroad);
                         return;
                     }
                 }
-                if (AvaiableRoads.Count <= 0)
+                if (CorrectPaths.Count <= 0)
                 {
                     // extended the extended road 
                     Road extendedRoads = new Road();
@@ -348,38 +403,30 @@ namespace Search.Views
         private void ComboBox_SearchSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // stop drawing animation if it's drawings
-            StopAnimation();
-
-            canvascontroll.Invalidate();
+            ClearSearchAndAnimation();
         }
 
         private void ComboBox_StartLocationsSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // stop drawing animation
-            StopAnimation();
-
-            var comboBox = sender as ComboBox;
-            string value = comboBox.SelectedItem as string;
-            if (!string.IsNullOrEmpty(value))
+            if (!string.IsNullOrEmpty(SearchTool.StartLocation))
             {
-                // initialze the previouseNode
-                if (startLocationOfPreviousNode != null)
+                // remove the Start logo from the old Start Node
+                if (sL != null)
                 {
-                    startLocationOfPreviousNode.StartPoint = false;
+                    sL.StartPoint = false;
                 }
-                startLocationOfPreviousNode = nodes.Find(n => n.NodeName == value);
-                // add logo to start location
-                sL = nodes.Find(n => n.NodeName == value);
+                // add the Start logo to new selected Node
+                sL = nodes.Find(n => n.NodeName == SearchTool.StartLocation);
                 sL.StartPoint = true;
-                // update the ui
-                canvascontroll.Invalidate();
+
+                // stop drawing animation
+                ClearSearchAndAnimation();
             }
         }
 
         private void ComboBox_GoolLocationSelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
-            // stop drawing animation
-            StopAnimation();
+
 
             // Get The New Select Gool Location
             var comboBox = sender as ComboBox;
@@ -387,25 +434,24 @@ namespace Search.Views
 
             if (!string.IsNullOrEmpty(value))
             {
-                // remove the Gool logo from the old Gool location
-                if (goolLocationOfPreviousNode != null)
+                // remove the Gool logo from the old Gool Node
+                if (gL != null)
                 {
-                    goolLocationOfPreviousNode.GoolPoint = false;
+                    gL.GoolPoint = false;
                 }
 
-                goolLocationOfPreviousNode = nodes.Find(n => n.NodeName == value);
+                // add the Gool logo to new selected Node
                 gL = nodes.Find(n => n.NodeName == value);
                 gL.GoolPoint = true;
 
-                canvascontroll.Invalidate();
+                // stop drawing animation
+                ClearSearchAndAnimation();
             }
         }
 
         private void ComboBox_MapsSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            StopAnimation();
             MapSelectionChanged_Clear();
-
             // if we change the map
             if (SearchTool.SelectedMap != null)
             {
@@ -423,15 +469,12 @@ namespace Search.Views
                 CleanCustomMapTool();
                 letters = GetAlphabeticallyLetters();
             }
-            canvascontroll.Invalidate();
+            ClearSearchAndAnimation();
         }
 
         private void MapSelectionChanged_Clear()
         {
-            AvaiableRoads.Clear();
             nodes = new List<Node>();
-            startLocationOfPreviousNode = null;
-            goolLocationOfPreviousNode = null;
             sL = null;
             gL = null;
         }
@@ -443,7 +486,7 @@ namespace Search.Views
             await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 Frame frame = new Frame();
-                frame.Navigate(typeof(TreeVisuals), MySearchPath);
+                frame.Navigate(typeof(TreeVisuals), SearchedPaths);
                 Window.Current.Content = frame;
                 // You have to activate the window in order to show it later.
                 Window.Current.Activate();
@@ -522,8 +565,10 @@ namespace Search.Views
                     if (selectedNode != null && pSelectedNode != null && selectedNode.NodeName != pSelectedNode.NodeName)
                     {
                         ConnectTwoNode(selectedNode, pSelectedNode);
+                        selectedNode = null;
+                        pSelectedNode = null;
                     }
-                    else if(exist && selectedNode == pSelectedNode)
+                    else if (exist && selectedNode == pSelectedNode)
                     {
                         selectedNode = null;
                     }
@@ -579,25 +624,6 @@ namespace Search.Views
             }
         }
 
-        private void ComboBox_SpeedSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var comboBox = sender as ComboBox;
-            string value = comboBox.SelectedItem as string;
-            if (value == SearchTool.SearchSpeed[0])
-            {
-                speed = 2000;
-            }
-            else if (value == SearchTool.SearchSpeed[1])
-            {
-                speed = 500;
-            }
-            else
-            {
-                speed = 250;
-            }
-            SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, speed);
-        }
-
         /// <summary>
         /// Update the Start/Gool point after the map changed
         /// </summary>
@@ -624,8 +650,7 @@ namespace Search.Views
 
         private void SearchSpeedTick_Tick(object sender, object e)
         {
-            if(MySearchPath.Count > 0)
-                Draw2();
+            SearchTool.AnimateMoveNumber++;
         }
 
         private void ConnectNodes_Button_Click(object sender, RoutedEventArgs e)
@@ -660,91 +685,9 @@ namespace Search.Views
 
         }
 
-        private List<Node> initializeMap1()
-        {
-            Node S = new Node() { NodeName = "S", X = 1, Y = 3 };
-            Node A = new Node() { NodeName = "A", X = 3, Y = 2 };
-            Node B = new Node() { NodeName = "B", X = 4, Y = 3 };
-            Node C = new Node() { NodeName = "C", X = 5, Y = 1 };
-            Node D = new Node() { NodeName = "D", X = 6, Y = 3 };
-            Node E = new Node() { NodeName = "E", X = 7, Y = 1 };
-            Node G = new Node() { NodeName = "G", X = 7, Y = 2 };
-
-            S.ConnectedNodes = new List<Node>() { A, B };
-            A.ConnectedNodes = new List<Node>() { S, C, B };
-            B.ConnectedNodes = new List<Node>() { S, A, D };
-            C.ConnectedNodes = new List<Node>() { A, E, D };
-            D.ConnectedNodes = new List<Node>() { B, C, G };
-            E.ConnectedNodes = new List<Node>() { C };
-            G.ConnectedNodes = new List<Node>() { D };
-
-            var nodee = new List<Node>() { S, A, B, C, D, E, G };
-
-            return nodee;
-
-        }
-        
-        private List<Node> initializeMap2()
-        {
-            var nodes = new List<Node>();
-            Node A = new Node() { NodeName = "A", X = 0, Y = 2 };
-            Node B = new Node() { NodeName = "B", X = 1, Y = 1 };
-            Node C = new Node() { NodeName = "C", X = 1, Y = 3 };
-            Node D = new Node() { NodeName = "D", X = 3, Y = 0 };
-            Node E = new Node() { NodeName = "E", X = 2, Y = 2 };
-            Node F = new Node() { NodeName = "F", X = 2, Y = 1 };
-            Node G = new Node() { NodeName = "G", X = 4, Y = 1 };
-            Node H = new Node() { NodeName = "H", X = 3, Y = 4 };
-            Node I = new Node() { NodeName = "I", X = 6, Y = 0 };
-            Node J = new Node() { NodeName = "J", X = 5, Y = 2 };
-            Node K = new Node() { NodeName = "K", X = 4, Y = 3 };
-            Node L = new Node() { NodeName = "L", X = 7, Y = 1 };
-            Node M = new Node() { NodeName = "M", X = 8, Y = 2 };
-            Node N = new Node() { NodeName = "N", X = 6, Y = 3 };
-
-            A.ConnectedNodes = new List<Node>() { B, C };
-            B.ConnectedNodes = new List<Node>() { A, D, F };
-            C.ConnectedNodes = new List<Node>() { A, E, H };
-            D.ConnectedNodes = new List<Node>() { B, I, G };
-            E.ConnectedNodes = new List<Node>() { F, C, K };
-            F.ConnectedNodes = new List<Node>() { B, E, G };
-            G.ConnectedNodes = new List<Node>() { D, F, J };
-            H.ConnectedNodes = new List<Node>() { C, K, N };
-            I.ConnectedNodes = new List<Node>() { D, L };
-            J.ConnectedNodes = new List<Node>() { G };
-            K.ConnectedNodes = new List<Node>() { E, H };
-            L.ConnectedNodes = new List<Node>() { I, M };
-            M.ConnectedNodes = new List<Node>() { L, N };
-            N.ConnectedNodes = new List<Node>() { H, M };
-
-            nodes = new List<Node>() { A, B, C, D, E, F, G, H, I, J, K, L, M, N };
-
-
-            return nodes;
-        }
-
-        private List<Map> GetDefualtMaps()
-        {
-            Map map1 = new Map()
-            {
-                Name = "Small",
-                IsDeleteEnabled = false,
-                Nodes = initializeMap1()
-
-            };
-            Map map2 = new Map()
-            {
-                Name = "Complex",
-                IsDeleteEnabled = false,
-                Nodes = initializeMap2()
-            };
-
-            return new List<Map>() { map1, map2 };
-        }
-
         private void AddNewMap_ButtonClick(object sender, RoutedEventArgs e)
         {
-            StopAnimation();
+            ClearSearchAndAnimation();
             SearchTool.SelectedMap = null;
         }
 
@@ -798,7 +741,7 @@ namespace Search.Views
             var button = (Button)sender;
             var tag = button.Tag;
             var map = SearchTool.Maps.Where(m => m.Name == tag.ToString()).FirstOrDefault();
-            if(SearchTool.SelectedMap == map)
+            if (SearchTool.SelectedMap == map)
             {
                 SearchTool.SelectedMap = SearchTool.Maps[0];
             }
@@ -816,112 +759,46 @@ namespace Search.Views
             }
         }
 
-        private void DrawPath()
+        private void BuildAnimationPaths()
         {
-            
-            if (treePathChildCount == -1)
+            if (treePathChildCount == SearchedPaths[treePathCount].Count)
             {
-                Walks.Clear();
-                drawPath = true;
-                treePathCount += 1;
-                SearchTool.SearchedPathCount += 1;
-
-                if (treePathCount == MySearchPath.Count)
-                {
-                    drawCorrentRoad = true;
-                    SearchSpeedTick.Stop();
-                    treePathCount = 0;
-                    PreviousWalks.Clear();
-                    canvascontroll.Invalidate();
-                    return;
-                }
-            }
-            if (treePathCount < MySearchPath.Count && drawPath == true)
-            {
-                treePathChildCount = MySearchPath[treePathCount].Count - 1;
-                drawPath = false;
-                if (PreviousWalks.Count > 1)
-                {
-                    while (treePathChildCount > 0)
-                    {
-                        bool passedNode = false;
-                        foreach (var passed in PreviousWalks)
-                        {
-                            if (MySearchPath[treePathCount][treePathChildCount].NodeName == passed.NodeName)
-                            {
-                                Walks.Add(passed);
-                                treePathChildCount -= 1;
-                                passedNode = true;
-                                break;
-                            }
-                            if (treePathChildCount == 0)
-                            {
-                                break;
-                            }
-                        }
-                        if (!passedNode)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-            }
-            if (treePathCount != MySearchPath.Count && treePathChildCount != -1)
-            {
-                Walks.Add(MySearchPath[treePathCount][treePathChildCount]);
-                PreviousWalks.Add(MySearchPath[treePathCount][treePathChildCount]);
-                treePathChildCount -= 1;
-                canvascontroll.Invalidate();
-            }
-        }
-
-        private void Play_Button_Click(object sender, RoutedEventArgs e)
-        {
-            UpdatePlayButtonIcon();
-        }
-        
-        public void Draw2()
-        {
-            if(treePathChildCount == MySearchPath[treePathCount].Count)
-            {
-                SearchTool.SearchedPathCount += 1;
+                // Start New Path
                 treePathCount++;
                 Walks.Clear();
-                if (treePathCount == MySearchPath.Count)
+                // Check if We Finished Building Exit
+                if (treePathCount == SearchedPaths.Count)
                 {
-                    drawCorrentRoad = true;
-                    SearchSpeedTick.Stop();
                     treePathCount = 0;
-                    PreviousWalks.Clear();
-                    MySearchPath.Clear();
-                    canvascontroll.Invalidate();
+                    SearchedPaths.Clear();
                     return;
                 }
+                // if Not Start the Newed Path from the Start
                 else
                 {
                     treePathChildCount = 0;
                     drawPath = true;
                 }
             }
+            // Check if we Passed those Nodes
             if (drawPath == true)
             {
                 drawPath = false;
                 if (PreviousWalks.Count > 1)
                 {
-                    while (treePathChildCount < MySearchPath[treePathCount].Count)
+                    while (treePathChildCount < SearchedPaths[treePathCount].Count)
                     {
                         bool passedNode = false;
                         foreach (var passed in PreviousWalks)
                         {
-                            if (MySearchPath[treePathCount][treePathChildCount] == passed)
+                            if (SearchedPaths[treePathCount][treePathChildCount] == passed)
                             {
                                 Walks.Add(passed);
                                 treePathChildCount += 1;
                                 passedNode = true;
                                 break;
                             }
-                            if (treePathChildCount == MySearchPath[treePathCount].Count - 1)
+                            if (treePathChildCount == SearchedPaths[treePathCount].Count - 1)
                             {
                                 break;
                             }
@@ -933,13 +810,28 @@ namespace Search.Views
                     }
                 }
             }
-            if (treePathChildCount < MySearchPath[treePathCount].Count)
+            if (treePathChildCount < SearchedPaths[treePathCount].Count)
             {
-                Walks.Add(MySearchPath[treePathCount][treePathChildCount]);
-                PreviousWalks.Add(MySearchPath[treePathCount][treePathChildCount]);
+                Walks.Add(SearchedPaths[treePathCount][treePathChildCount]);
+                PreviousWalks.Add(SearchedPaths[treePathCount][treePathChildCount]);
                 treePathChildCount += 1;
-                canvascontroll.Invalidate();
+                AnimationsWalks.Add(new List<Node>(Walks));
+                BuildAnimationPaths();
             }
+        }
+
+        private void Play_Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (SearchSpeedTick.IsEnabled)
+                debugAnimation();
+            else
+            {
+                if (SearchTool.AnimateMoveNumber == AnimationsWalks.Count - 1 && !drawAnimation)
+                    SearchTool.AnimateMoveNumber = 0;
+
+                startAnimation();
+            }
+
         }
 
         private async void Info_Button_ClickAsync(object sender, RoutedEventArgs e)
@@ -949,22 +841,82 @@ namespace Search.Views
             await showDialog.ShowAsync();
         }
 
-        private void StopAnimation()
+        private void ClearSearchAndAnimation()
         {
             SearchSpeedTick.Stop();
-            
-
             treePathCount = 0;
             treePathChildCount = 0;
-            SearchTool.SearchedPathCount = 0;
+            SearchTool.AnimateMoveNumber = 0;
+            SearchTool.IsAnimationAvailable = false;
+            SearchTool.FindedCorrectPath = false;
+            SearchTool.NextAnimateButtonEnabled = false;
             drawPath = true;
             drawCorrentRoad = false;
-            
-            Walks.Clear();
-            AvaiableRoads.Clear();
-            MySearchPath.Clear();
-            PreviousWalks.Clear();
+            drawAnimation = false;
+
+            CorrectPaths.Clear();
+
             canvascontroll.Invalidate();
+        }
+
+        private void PreviousStep_Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (AnimationsWalks.Count > 0)
+            {
+                debugAnimation();
+                SearchTool.AnimateMoveNumber--;
+            }
+        }
+
+        private void NextStep_Button_Click(object sender, RoutedEventArgs e)
+        {
+            SearchTool.AnimateMoveNumber++;
+        }
+
+        private void Speed_Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (SearchTool.SelectedSearchSpeed == "X.5")
+            {
+                speed = 1000;
+                SearchTool.SelectedSearchSpeed = "X1";
+            }
+            else if (SearchTool.SelectedSearchSpeed == "X1")
+            {
+                speed = 500;
+                SearchTool.SelectedSearchSpeed = "X2";
+            }
+            else if (SearchTool.SelectedSearchSpeed == "X2")
+            {
+                speed = 250;
+                SearchTool.SelectedSearchSpeed = "X4";
+            }
+            else if (SearchTool.SelectedSearchSpeed == "X4")
+            {
+                speed = 2000;
+                SearchTool.SelectedSearchSpeed = "X.5";
+            }
+            SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, speed);
+        }
+
+        private void stopAnimation()
+        {
+            drawAnimation = false;
+            play.Symbol = Symbol.Play;
+            SearchSpeedTick.Stop();
+        }
+
+        private void startAnimation()
+        {
+            drawAnimation = true;
+            play.Symbol = Symbol.Pause;
+            SearchSpeedTick.Start();
+        }
+
+        private void debugAnimation()
+        {
+            drawAnimation = true;
+            play.Symbol = Symbol.Play;
+            SearchSpeedTick.Stop();
         }
 
         private Tuple<int, int> GetXYAxis(float x, float y)
@@ -1016,16 +968,51 @@ namespace Search.Views
             }
             if (exist)
             {
-                selectedNode.ConnectedNodes.Add(pSelectedNode);
-                pSelectedNode.ConnectedNodes.Add(selectedNode);
                 Line line = new Line()
                 {
-                    Point1 = this.selectedNode,
-                    Point2 = this.pSelectedNode
+                    Point1 = selectedNode,
+                    Point2 = pSelectedNode
                 };
+                selectedNode.ConnectedNodes.Add(pSelectedNode);
+                pSelectedNode.ConnectedNodes.Add(selectedNode);
                 Lines.Add(line);
-                this.selectedNode = null;
-                this.pSelectedNode = null;
+            }
+        }
+
+        private void ConnectTwoNodeAndBetween(Node selectedNode, Node pSelectedNode)
+        {
+            bool exist = false;
+            foreach (var node in availableNodeToConnect)
+            {
+                if (node.NodeName == selectedNode.NodeName)
+                {
+                    exist = true;
+                    break;
+                }
+            }
+            if (exist)
+            {
+                Line line = new Line()
+                {
+                    Point1 = selectedNode,
+                    Point2 = pSelectedNode
+                };
+                bool pointBetweenExist = false;
+                foreach (var node in nodes)
+                {
+                    if (line.IfPointOnTheLine(xAxis[node.X], yAxis[node.Y], circleRadius, xAxis, yAxis) && (node != selectedNode && node != pSelectedNode))
+                    {
+                        pointBetweenExist = true;
+                        ConnectTwoNode(node, selectedNode);
+                        ConnectTwoNode(node, pSelectedNode);
+                    }
+                }
+                if (!pointBetweenExist)
+                {
+                    selectedNode.ConnectedNodes.Add(pSelectedNode);
+                    pSelectedNode.ConnectedNodes.Add(selectedNode);
+                    Lines.Add(line);
+                }
             }
         }
 
@@ -1038,6 +1025,7 @@ namespace Search.Views
 
         private void GetAvailableNodeToConnect(Node sNode)
         {
+            GetAvailableNodeToConnect2(sNode);
             availableNodeToConnect.Clear();
             if (sNode != null && SearchTool.ConnectingNodeTogleEnabled)
             {
@@ -1194,6 +1182,17 @@ namespace Search.Views
             }
         }
 
+        private void GetAvailableNodeToConnect2(Node sNode)
+        {
+            availableNodeToConnect.Clear();
+            var connectedLine = Lines.Where(l => l.Point1 == sNode || l.Point2 == sNode).ToList();
+            foreach (var line in connectedLine)
+            {
+
+            }
+
+        }
+
         /// <summary>
         /// Get Copy of the nodes from the selected Map
         /// </summary>
@@ -1236,9 +1235,9 @@ namespace Search.Views
 
         private void RemoveLine(Node node)
         {
-            for(int i = 0; i < Lines.Count; i++)
+            for (int i = 0; i < Lines.Count; i++)
             {
-                if(Lines[i].Point2 == node || Lines[i].Point1 == node)
+                if (Lines[i].Point2 == node || Lines[i].Point1 == node)
                 {
                     Lines.RemoveAt(i);
                     i--;
@@ -1246,15 +1245,205 @@ namespace Search.Views
             }
         }
 
-        private void UpdatePlayButtonIcon()
+        private List<Node> initializeMap1()
         {
-            if(SearchSpeedTick.IsEnabled)
+            Node S = new Node() { NodeName = "S", X = 1, Y = 3 };
+            Node A = new Node() { NodeName = "A", X = 3, Y = 2 };
+            Node B = new Node() { NodeName = "B", X = 4, Y = 3 };
+            Node C = new Node() { NodeName = "C", X = 5, Y = 1 };
+            Node D = new Node() { NodeName = "D", X = 6, Y = 3 };
+            Node E = new Node() { NodeName = "E", X = 7, Y = 1 };
+            Node G = new Node() { NodeName = "G", X = 7, Y = 2 };
+
+            S.ConnectedNodes = new List<Node>() { A, B };
+            A.ConnectedNodes = new List<Node>() { S, C, B };
+            B.ConnectedNodes = new List<Node>() { S, A, D };
+            C.ConnectedNodes = new List<Node>() { A, E, D };
+            D.ConnectedNodes = new List<Node>() { B, C, G };
+            E.ConnectedNodes = new List<Node>() { C };
+            G.ConnectedNodes = new List<Node>() { D };
+
+            var nodee = new List<Node>() { S, A, B, C, D, E, G };
+
+            return nodee;
+        }
+
+        private List<Node> initializeMap2()
+        {
+            var nodes = new List<Node>();
+            Node A = new Node() { NodeName = "A", X = 0, Y = 2 };
+            Node B = new Node() { NodeName = "B", X = 1, Y = 1 };
+            Node C = new Node() { NodeName = "C", X = 1, Y = 3 };
+            Node D = new Node() { NodeName = "D", X = 3, Y = 0 };
+            Node E = new Node() { NodeName = "E", X = 2, Y = 2 };
+            Node F = new Node() { NodeName = "F", X = 2, Y = 1 };
+            Node G = new Node() { NodeName = "G", X = 4, Y = 1 };
+            Node H = new Node() { NodeName = "H", X = 3, Y = 4 };
+            Node I = new Node() { NodeName = "I", X = 6, Y = 0 };
+            Node J = new Node() { NodeName = "J", X = 5, Y = 2 };
+            Node K = new Node() { NodeName = "K", X = 4, Y = 3 };
+            Node L = new Node() { NodeName = "L", X = 7, Y = 1 };
+            Node M = new Node() { NodeName = "M", X = 8, Y = 2 };
+            Node N = new Node() { NodeName = "N", X = 6, Y = 3 };
+
+            A.ConnectedNodes = new List<Node>() { B, C };
+            B.ConnectedNodes = new List<Node>() { A, D, F };
+            C.ConnectedNodes = new List<Node>() { A, E, H };
+            D.ConnectedNodes = new List<Node>() { B, I, G };
+            E.ConnectedNodes = new List<Node>() { F, C, K };
+            F.ConnectedNodes = new List<Node>() { B, E, G };
+            G.ConnectedNodes = new List<Node>() { D, F, J };
+            H.ConnectedNodes = new List<Node>() { C, K, N };
+            I.ConnectedNodes = new List<Node>() { D, L };
+            J.ConnectedNodes = new List<Node>() { G };
+            K.ConnectedNodes = new List<Node>() { E, H };
+            L.ConnectedNodes = new List<Node>() { I, M };
+            M.ConnectedNodes = new List<Node>() { L, N };
+            N.ConnectedNodes = new List<Node>() { H, M };
+
+            nodes = new List<Node>() { A, B, C, D, E, F, G, H, I, J, K, L, M, N };
+
+
+            return nodes;
+        }
+
+        private List<Map> GetDefualtMaps()
+        {
+            Map map1 = new Map()
             {
-                play.Symbol = Symbol.Pause;
+                Name = "Small",
+                IsDeleteEnabled = false,
+                Nodes = initializeMap1()
+
+            };
+            Map map2 = new Map()
+            {
+                Name = "Complex",
+                IsDeleteEnabled = false,
+                Nodes = initializeMap2()
+            };
+
+            return new List<Map>() { map1, map2 };
+        }
+
+        private void DrawPath()
+        {
+            if (treePathChildCount == -1)
+            {
+                Walks.Clear();
+                drawPath = true;
+                treePathCount += 1;
+                SearchTool.SearchedPathCount += 1;
+
+                if (treePathCount == SearchedPaths.Count)
+                {
+                    drawCorrentRoad = true;
+                    SearchSpeedTick.Stop();
+                    treePathCount = 0;
+                    PreviousWalks.Clear();
+                    canvascontroll.Invalidate();
+                    return;
+                }
             }
-            else
+            if (treePathCount < SearchedPaths.Count && drawPath == true)
             {
-                play.Symbol = Symbol.Play;
+                treePathChildCount = SearchedPaths[treePathCount].Count - 1;
+                drawPath = false;
+                if (PreviousWalks.Count > 1)
+                {
+                    while (treePathChildCount > 0)
+                    {
+                        bool passedNode = false;
+                        foreach (var passed in PreviousWalks)
+                        {
+                            if (SearchedPaths[treePathCount][treePathChildCount].NodeName == passed.NodeName)
+                            {
+                                Walks.Add(passed);
+                                treePathChildCount -= 1;
+                                passedNode = true;
+                                break;
+                            }
+                            if (treePathChildCount == 0)
+                            {
+                                break;
+                            }
+                        }
+                        if (!passedNode)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+            }
+            if (treePathCount != SearchedPaths.Count && treePathChildCount != -1)
+            {
+                Walks.Add(SearchedPaths[treePathCount][treePathChildCount]);
+                PreviousWalks.Add(SearchedPaths[treePathCount][treePathChildCount]);
+                treePathChildCount -= 1;
+                canvascontroll.Invalidate();
+            }
+        }
+
+        public void Draw2()
+        {
+            if (treePathChildCount == SearchedPaths[treePathCount].Count)
+            {
+                SearchTool.SearchedPathCount += 1;
+                treePathCount++;
+                Walks.Clear();
+                if (treePathCount == SearchedPaths.Count)
+                {
+                    drawCorrentRoad = true;
+                    SearchSpeedTick.Stop();
+                    treePathCount = 0;
+                    PreviousWalks.Clear();
+                    SearchedPaths.Clear();
+                    canvascontroll.Invalidate();
+                    return;
+                }
+                else
+                {
+                    treePathChildCount = 0;
+                    drawPath = true;
+                }
+            }
+            if (drawPath == true)
+            {
+                drawPath = false;
+                if (PreviousWalks.Count > 1)
+                {
+                    while (treePathChildCount < SearchedPaths[treePathCount].Count)
+                    {
+                        bool passedNode = false;
+                        foreach (var passed in PreviousWalks)
+                        {
+                            if (SearchedPaths[treePathCount][treePathChildCount] == passed)
+                            {
+                                Walks.Add(passed);
+                                treePathChildCount += 1;
+                                passedNode = true;
+                                break;
+                            }
+                            if (treePathChildCount == SearchedPaths[treePathCount].Count - 1)
+                            {
+                                break;
+                            }
+                        }
+                        if (!passedNode)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (treePathChildCount < SearchedPaths[treePathCount].Count)
+            {
+                Walks.Add(SearchedPaths[treePathCount][treePathChildCount]);
+                PreviousWalks.Add(SearchedPaths[treePathCount][treePathChildCount]);
+                treePathChildCount += 1;
+                canvascontroll.Invalidate();
+                AnimationsWalks.Add(new List<Node>(Walks));
             }
         }
     }

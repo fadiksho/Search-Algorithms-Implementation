@@ -12,11 +12,53 @@ namespace Search.ViewModel.GraphSearch
 {
     public class SearchToolViewModel : INotifyPropertyChanged
     {
+        public event EventHandler AnimationStoped;
+        public void OnAnimationStoped()
+        {
+            AnimationStoped?.Invoke(this, EventArgs.Empty);
+        }
+
+        public event EventHandler AnimationStarted;
+        public void OnAnimationStarted()
+        {
+            AnimationStarted?.Invoke(this, EventArgs.Empty);
+        }
+
+        public event EventHandler<int> animateMoveChanged;
+        public void OnAnimateMoveChanged(int num)
+        {
+            animateMoveChanged?.Invoke(this, num);
+        }
+
+        private int animateMoveNumber;
+        public int AnimateMoveNumber
+        {
+            get
+            {
+                return animateMoveNumber;
+            }
+            set
+            {
+                animateMoveNumber = value;
+                OnAnimateMoveChanged(value);
+            }
+        }
+
+        private bool isAnimationAvailable;
+        public bool IsAnimationAvailable
+        {
+            get { return isAnimationAvailable; }
+            set
+            {
+                isAnimationAvailable = value;
+                OnPropertyChanged();
+            }
+        }
+
         public SearchToolViewModel(string selectedSearchType, string selectedSearchSpeed)
         {
             this.selectedSearchType = selectedSearchType;
-            this.selectedMap = selectedMap;
-            this.selectedSearchSpeed = selectedSearchSpeed;
+            this.SelectedSearchSpeed = selectedSearchSpeed;
         }
 
         private string selectedSearchType;
@@ -25,13 +67,13 @@ namespace Search.ViewModel.GraphSearch
             get { return selectedSearchType; }
             set
             {
-                if(selectedSearchType != value)
+                if (selectedSearchType != value)
                 {
                     selectedSearchType = value;
                     OnPropertyChanged();
                 }
             }
-               
+
         }
 
         private string startLocation;
@@ -40,12 +82,12 @@ namespace Search.ViewModel.GraphSearch
             get { return startLocation; }
             set
             {
-                if(startLocation != value)
+                if (startLocation != value)
                 {
                     startLocation = value;
                     OnPropertyChanged();
                 }
-                
+
             }
         }
 
@@ -55,12 +97,12 @@ namespace Search.ViewModel.GraphSearch
             get { return goolLocation; }
             set
             {
-                if(goolLocation != value)
+                if (goolLocation != value)
                 {
                     goolLocation = value;
-                    OnPropertyChanged();    
+                    OnPropertyChanged();
                 }
-                
+
             }
         }
 
@@ -70,12 +112,12 @@ namespace Search.ViewModel.GraphSearch
             get { return selectedMap; }
             set
             {
-                if(selectedMap != value)
+                if (selectedMap != value)
                 {
                     selectedMap = value;
                     OnPropertyChanged();
                 }
-                
+
             }
         }
 
@@ -85,11 +127,8 @@ namespace Search.ViewModel.GraphSearch
             get { return selectedSearchSpeed; }
             set
             {
-                if(selectedSearchSpeed != value)
-                {
-                    selectedSearchSpeed = value;
-                    OnPropertyChanged();
-                }
+                selectedSearchSpeed = value;
+                OnPropertyChanged();
             }
         }
 
@@ -138,12 +177,12 @@ namespace Search.ViewModel.GraphSearch
             get { return connectingNodeTogleEnabled; }
             set
             {
-                if(connectingNodeTogleEnabled != value)
+                if (connectingNodeTogleEnabled != value)
                 {
                     connectingNodeTogleEnabled = value;
                     OnPropertyChanged();
                 }
-                
+
             }
         }
 
@@ -159,17 +198,49 @@ namespace Search.ViewModel.GraphSearch
         }
 
         private string newMapName;
-
         public string NewMapNameTextBox
         {
             get { return newMapName; }
             set
             {
-                if(newMapName != value)
+                if (newMapName != value)
                 {
                     newMapName = value;
                     OnPropertyChanged();
                 }
+            }
+        }
+
+        private bool previousAnimateButtonEnabled;
+        public bool PreviousAnimateButtonEnabled
+        {
+            get { return previousAnimateButtonEnabled; }
+            set
+            {
+                previousAnimateButtonEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool nextAnimateButtonEnabled;
+        public bool NextAnimateButtonEnabled
+        {
+            get { return nextAnimateButtonEnabled; }
+            set
+            {
+                nextAnimateButtonEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool findedCorrectPath;
+        public bool FindedCorrectPath
+        {
+            get { return findedCorrectPath; }
+            set
+            {
+                findedCorrectPath = value;
+                OnPropertyChanged();
             }
         }
 
@@ -196,7 +267,7 @@ namespace Search.ViewModel.GraphSearch
 
         public ObservableCollection<string> SearchSpeed { get; set; } =
             new ObservableCollection<string>() { "X1", "X2", "X4" };
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

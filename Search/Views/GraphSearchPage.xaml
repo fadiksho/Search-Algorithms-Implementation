@@ -25,6 +25,7 @@
                         <Setter Target="Column1.Width" Value="Auto"/>
                         <Setter Target="Column3.Width" Value="Auto"/>
                         <Setter Target="Column4.Width" Value="Auto"/>
+                        <Setter Target="Column5.Width" Value="*"/>
 
                         <Setter Target="searchType_TextBlock.(Grid.Row)" Value="0"/>
                         <Setter Target="searchType_ComboBox.(Grid.Row)" Value="0"/>
@@ -37,23 +38,19 @@
                         <Setter Target="startLocation_TextBlock.(Grid.Column)" Value="0"/>
                         <Setter Target="startLoaction_ComboBox.(Grid.Column)" Value="1"/>
 
-                        <Setter Target="goolLoaction_TextBlock.(Grid.Row)" Value="2"/>
-                        <Setter Target="goolLoction_ComboBox.(Grid.Row)" Value="2"/>
-                        <Setter Target="goolLoaction_TextBlock.(Grid.Column)" Value="0"/>
-                        <Setter Target="goolLoction_ComboBox.(Grid.Column)" Value="1"/>
+                        <Setter Target="goolLoaction_TextBlock.(Grid.Row)" Value="1"/>
+                        <Setter Target="goolLoction_ComboBox.(Grid.Row)" Value="1"/>
+                        <Setter Target="goolLoaction_TextBlock.(Grid.Column)" Value="3"/>
+                        <Setter Target="goolLoction_ComboBox.(Grid.Column)" Value="4"/>
 
-                        <Setter Target="maps_TextBlock.(Grid.Row)" Value="1"/>
-                        <Setter Target="maps_ComboBox.(Grid.Row)" Value="1"/>
-                        <Setter Target="maps_TextBlock.(Grid.Column)" Value="3"/>
-                        <Setter Target="maps_ComboBox.(Grid.Column)" Value="4"/>
-
-                        <Setter Target="speed_TextBlock.(Grid.Row)" Value="2"/>
-                        <Setter Target="speed_ComboBox.(Grid.Row)" Value="2"/>
-                        <Setter Target="speed_TextBlock.(Grid.Column)" Value="3"/>
-                        <Setter Target="speed_ComboBox.(Grid.Column)" Value="4"/>
+                        <Setter Target="maps_TextBlock.(Grid.Row)" Value="2"/>
+                        <Setter Target="maps_ComboBox.(Grid.Row)" Value="2"/>
+                        <Setter Target="maps_TextBlock.(Grid.Column)" Value="0"/>
+                        <Setter Target="maps_ComboBox.(Grid.Column)" Value="1"/>
+                        <Setter Target="maps_ComboBox.(Grid.ColumnSpan)" Value="4" />
+                        <Setter Target="maps_TextBlock.HorizontalAlignment" Value="Center" />
 
                         <Setter Target="searchbutton.(Grid.RowSpan)" Value="3"/>
-
 
                         <Setter Target="CanvasContainer.(Grid.RowSpan)" Value="1"/>
                         <Setter Target="SearchMediaToolContainer.Orientation" Value="Horizontal" />
@@ -71,31 +68,31 @@
                         <Setter Target="startLocation_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="goolLoaction_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="maps_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        <Setter Target="speed_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        
 
                         <Setter Target="searchType_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="startLoaction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="goolLoction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="maps_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        <Setter Target="speed_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        
 
                         <Setter Target="searchType_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="startLoaction_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="goolLoction_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="maps_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
-                        <Setter Target="speed_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
+                        
 
                         <Setter Target="searchType_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
                         <Setter Target="startLoaction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
                         <Setter Target="goolLoction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
                         <Setter Target="maps_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
-                        <Setter Target="speed_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
+                        
 
                         <Setter Target="searchType_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
                         <Setter Target="startLocation_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
                         <Setter Target="goolLoaction_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
                         <Setter Target="maps_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
-                        <Setter Target="speed_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
+                        
 
                         <Setter Target="searchbutton.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
 
@@ -127,6 +124,7 @@
                         <Setter Target="NextStep_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Tree_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="AddMap_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
+                        <Setter Target="Speed_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
 
                         <!--#endregion-->
 
@@ -178,7 +176,7 @@
                 <ColumnDefinition x:Name="Column2" />
                 <ColumnDefinition x:Name="Column3" />
                 <ColumnDefinition x:Name="Column4" />
-                <ColumnDefinition x:Name="Column5" />
+                <ColumnDefinition x:Name="Column5" Width="Auto"/>
                 <ColumnDefinition x:Name="Column6" Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock
@@ -204,7 +202,7 @@
                 Grid.Column="1"
                 Text="Start Location :" Margin="5"
                 Foreground="{StaticResource CustomWhiteBrashColor}"
-                VerticalAlignment="Center"/>
+                VerticalAlignment="Center" />
             <ComboBox
                 x:Name="startLoaction_ComboBox"
                 Grid.Row="1"
@@ -221,7 +219,7 @@
                 Grid.Column="2"
                 Text="Gool Location :" Margin="5"
                 Foreground="{StaticResource CustomWhiteBrashColor}"
-                VerticalAlignment="Center"/>
+                VerticalAlignment="Center" />
             <ComboBox 
                 x:Name="goolLoction_ComboBox"
                 Grid.Row="1"
@@ -237,7 +235,7 @@
                 x:Name="maps_TextBlock" 
                 Grid.Column="3"
                 Text="Maps :" 
-                Margin="5" HorizontalAlignment="Left" 
+                Margin="5"
                 VerticalAlignment="Center"
                 Foreground="{StaticResource CustomWhiteBrashColor}"/>
             <ComboBox 
@@ -276,7 +274,7 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
 
-            <TextBlock x:Name="speed_TextBlock" 
+            <!--<TextBlock x:Name="speed_TextBlock" 
                        Text="Speed :"
                        VerticalAlignment="Center"
                        Grid.Column="4"
@@ -292,7 +290,7 @@
                       Margin="5"
                       ItemsSource="{x:Bind SearchTool.SearchSpeed}"
                       SelectedItem="{x:Bind SearchTool.SelectedSearchSpeed, Mode=TwoWay}"
-                      SelectionChanged="ComboBox_SpeedSelectionChanged" />
+                      SelectionChanged="ComboBox_SpeedSelectionChanged" />-->
 
             <Button x:Name="searchbutton"
                     Grid.Column="5"
@@ -306,7 +304,7 @@
         </Grid>
 
         <StackPanel Orientation="Horizontal" Grid.Row="1"
-                    Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}" d:IsHidden="True">
+                    Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}">
             <TextBlock Text="Searched Path:"
                        Foreground="{StaticResource CustomWhiteBrashColor}" 
                        Margin="5" VerticalAlignment="Center">
@@ -331,32 +329,30 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
             <TextBlock 
-                x:Name="MapValidation_TextBlock"  
-                Visibility="Visible" 
+                x:Name="MapValidation_TextBlock"
                 Grid.Column="1"
-                Margin="5,5,0,1"
                 Foreground="Red"
+                Margin="5,0,0,0"
                 Text="test"
-                FontSize="{StaticResource MediomFontSize}"
-                Grid.ColumnSpan="3"/>
+                FontSize="{StaticResource MediomFontSize}"/>
             <RadioButton 
                 x:Name="AddNodes_RadioButton" Grid.Row="1" Content="Add Nodes" 
-                         Tag="Green" IsChecked="True"
-                         Click="ConnectNodes_Button_Click" Style="{StaticResource MyRadioButton}"
-                
-                         FontSize="{StaticResource MediomFontSize}"/>
-            <RadioButton x:Name="ConnectNodes_RadioButton" Grid.Row="2" Content="Connect Nodes" Tag="Green"
-                        Click="ConnectNodes_Button_Click"
-                         FontSize="{StaticResource MediomFontSize}"
-                            Style="{StaticResource MyRadioButton}"
-                            IsChecked="{x:Bind SearchTool.ConnectingNodeTogleEnabled, Mode=TwoWay}"
-                            />
+                Tag="Green" IsChecked="True"
+                Click="ConnectNodes_Button_Click"
+                Style="{StaticResource MyRadioButton}"
+                FontSize="{StaticResource MediomFontSize}"/>
+            <RadioButton 
+                x:Name="ConnectNodes_RadioButton" Grid.Row="2" Content="Connect Nodes" Tag="Green"
+                Click="ConnectNodes_Button_Click"
+                FontSize="{StaticResource MediomFontSize}"
+                Style="{StaticResource MyRadioButton}"
+                IsChecked="{x:Bind SearchTool.ConnectingNodeTogleEnabled, Mode=TwoWay}"
+                />
 
             <TextBox Grid.Row="1" x:Name="MapName_TextBox" Grid.Column="1"
                      Grid.ColumnSpan="4"
                      Style="{StaticResource MapName_TextBox_Style}"
                      HorizontalAlignment="Stretch"
-                     
                      VerticalAlignment="Center"
                      Margin="5,0,0,0"
                      Padding="5"
@@ -398,7 +394,7 @@
                                   IsTapEnabled="True" 
                                   RightTapped="canvascontroll_RightTapped"
                                   Tapped="canvascontroll_Tapped"
-                                  Canvas.ZIndex="2">
+                                  Canvas.ZIndex="2" >
 
             </canvas:CanvasControl >
 
@@ -416,16 +412,17 @@
                 x:Name="PreviousStep_Button"
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"
-                FontSize="{StaticResource MediomFontSize}" >
-                <SymbolIcon Symbol="Previous" />
+                Style="{StaticResource CircleButtonStyle}"                
+                IsEnabled="{x:Bind SearchTool.PreviousAnimateButtonEnabled, Mode=OneWay}"
+                Click="PreviousStep_Button_Click">
+                <SymbolIcon Symbol="Previous"/>
             </Button>
             <Button
                 x:Name="Play_Button"
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"
-                FontSize="{StaticResource MediomFontSize}"
+                Style="{StaticResource CircleButtonStyle}"                
+                IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}"
                 Click="Play_Button_Click">
                 <SymbolIcon x:Name="play" Symbol="Play"/>
             </Button>
@@ -434,15 +431,30 @@
                 x:Name="NextStep_Button"
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"
-                FontSize="{StaticResource MediomFontSize}">
+                Style="{StaticResource CircleButtonStyle}"                
+                IsEnabled="{x:Bind SearchTool.NextAnimateButtonEnabled,Mode=OneWay}"
+                Click="NextStep_Button_Click">
                 <SymbolIcon Symbol="Next" />
             </Button>
+            <Button
+                x:Name="Speed_Button"
+                Padding="7"
+                HorizontalContentAlignment="Center"
+                Width="{Binding Path=Width, ElementName=SearchMediaToolContainer}"
+                Height="{Binding Path=Height, ElementName=SearchMediaToolContainer}"
+                Margin="{StaticResource SmallVerticalMargin}"
+                Style="{StaticResource CircleButtonStyle}"
+                FontSize="{StaticResource MediomFontSize}"
+                Content="{x:Bind SearchTool.SelectedSearchSpeed, Mode=OneWay}"
+                FontFamily="arial"
+                Click="Speed_Button_Click" />
+            
             <Button
                 x:Name="Tree_Button"
                 Padding="5"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource treeInfoButtonStyle}" >
+                Style="{StaticResource treeInfoButtonStyle}"
+                IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}">
             </Button>
 
         </StackPanel>
@@ -461,13 +473,13 @@
         <!--<floatingControll:FloatingContent Boundary="Parent" Grid.Row="4" Canvas.ZIndex="10"
                                    Width="50" Height="50" HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom">
-            <Button x:Name="AddMap_Button" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Left" VerticalAlignment="Top"
-                    Content="&#xE710;" Padding="10" FontSize="{StaticResource MediomFontSize}" Click="AddNewMap_ButtonClick"
-                    Style="{StaticResource CircleButtonStyle}"
+            <Button FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Content="&#xE710;" Padding="10" FontSize="{StaticResource MediomFontSize}"
+                    Style="{StaticResource }"
                     Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}"/>
 
-        </floatingControll:FloatingContent>
-        <floatingControll:FloatingContent Boundary="Parent" Grid.Row="4" Canvas.ZIndex="10"
+        </floatingControll:FloatingContent>-->
+        <!--<floatingControll:FloatingContent Boundary="Parent" Grid.Row="4" Canvas.ZIndex="10"
                                     Width="50" Height="50" HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom" d:IsHidden="True">
             <Button x:Name="RemoveNodes_Button" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Left" VerticalAlignment="Top"
