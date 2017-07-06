@@ -454,6 +454,7 @@
                 Padding="5"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource treeInfoButtonStyle}"
+                Click="{x:Bind Tree_Button_ClickAsync}"
                 IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}">
             </Button>
 
