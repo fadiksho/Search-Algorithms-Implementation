@@ -403,7 +403,7 @@ namespace Search.Views
                 var yTappedLoacation = (float)e.GetPosition(canvascontroll).Y;
                 var xyIndex = GetXYAxis(xTappedLoacation, yTappedLoacation);
                 bool exist = false;
-                // Selec    t the node if its exist on the board at the tap location
+                // Select the node if its exist on the board at the tap location
                 if (xyIndex.Item1 != -1)
                 {
                     foreach (var node in nodes)
@@ -456,21 +456,15 @@ namespace Search.Views
                     {
                         if (selectedNode != null && pSelectedNode != null && selectedNode != pSelectedNode)
                         {
-                            FillAvailableNodeToConnect(pSelectedNode);
                             bool sucssefullConnected = ConnectTwoNodeAndBetween(selectedNode, pSelectedNode);
                             if (sucssefullConnected)
                                 selectedNode = pSelectedNode;
-
-                            FillAvailableNodeToConnect(selectedNode);
                         }
                         else if (exist && selectedNode == pSelectedNode)
                         {
                             selectedNode = null;
                         }
-                        else
-                        {
-                            FillAvailableNodeToConnect(selectedNode);
-                        }
+                        FillAvailableNodeToConnect(selectedNode);
                     }
                 }
                 else
