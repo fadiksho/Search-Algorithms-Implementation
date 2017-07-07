@@ -106,6 +106,50 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
+        private string selectedSearchSpeed;
+        public string SelectedSearchSpeed
+        {
+            get { return selectedSearchSpeed; }
+            set
+            {
+                selectedSearchSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string newMapName;
+        public string NewMapName
+        {
+            get { return newMapName; }
+            set
+            {
+                if(newMapName !=value)
+                {
+                    newMapName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string newMapNameValidation;    
+        public string NewMapNameValidation
+        {
+            get { return newMapNameValidation; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(newMapName))
+                    IsNewMapNameValidationEnabled = true;
+                else
+                    IsNewMapNameValidationEnabled = false;
+                OnPropertyChanged("IsNewMapNameValidationEnabled");
+
+                newMapNameValidation = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsNewMapNameValidationEnabled { get; set; }
+
         private Map selectedMap;
         public Map SelectedMap
         {
@@ -118,17 +162,6 @@ namespace Search.ViewModel.GraphSearch
                     OnPropertyChanged();
                 }
 
-            }
-        }
-
-        private string selectedSearchSpeed;
-        public string SelectedSearchSpeed
-        {
-            get { return selectedSearchSpeed; }
-            set
-            {
-                selectedSearchSpeed = value;
-                OnPropertyChanged();
             }
         }
 
@@ -197,19 +230,6 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private string newMapName;
-        public string NewMapNameTextBox
-        {
-            get { return newMapName; }
-            set
-            {
-                if (newMapName != value)
-                {
-                    newMapName = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
 
         private bool previousAnimateButtonEnabled;
         public bool PreviousAnimateButtonEnabled

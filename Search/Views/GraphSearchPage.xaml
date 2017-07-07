@@ -68,31 +68,31 @@
                         <Setter Target="startLocation_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="goolLoaction_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="maps_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        
+
 
                         <Setter Target="searchType_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="startLoaction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="goolLoction_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="maps_ComboBox.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        
+
 
                         <Setter Target="searchType_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="startLoaction_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="goolLoction_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="maps_ComboBox.Height" Value="{StaticResource SmallHeight}"/>
-                        
+
 
                         <Setter Target="searchType_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
                         <Setter Target="startLoaction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
                         <Setter Target="goolLoction_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
                         <Setter Target="maps_ComboBox.Margin" Value="{StaticResource SmallComboBoxMargin}"/>
-                        
+
 
                         <Setter Target="searchType_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
                         <Setter Target="startLocation_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
                         <Setter Target="goolLoaction_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
                         <Setter Target="maps_TextBlock.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
-                        
+
 
                         <Setter Target="searchbutton.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
 
@@ -331,9 +331,11 @@
             <TextBlock 
                 x:Name="MapValidation_TextBlock"
                 Grid.Column="1"
+                Grid.ColumnSpan="3"
                 Foreground="Red"
                 Margin="5,0,0,0"
-                Text="test"
+                Text="{x:Bind SearchTool.NewMapNameValidation, Mode=OneWay}"
+                Visibility="{x:Bind SearchTool.IsNewMapNameValidationEnabled, Mode=OneWay}"
                 FontSize="{StaticResource MediomFontSize}"/>
             <RadioButton 
                 x:Name="AddNodes_RadioButton" Grid.Row="1" Content="Add Nodes" 
@@ -356,24 +358,34 @@
                      VerticalAlignment="Center"
                      Margin="5,0,0,0"
                      Padding="5"
-                     Text="{x:Bind SearchTool.NewMapNameTextBox, Mode=TwoWay}"
+                     Text="{x:Bind SearchTool.NewMapName, Mode=TwoWay}"
                      PlaceholderText="Map Name" />
 
             <Button x:Name="Save_Button" Grid.Row="2"
-                            Grid.Column="1" 
-                            Style="{StaticResource myButton}"
-                            Content="&#xE8FB;" Width="75" 
-                            FontFamily="Segoe MDL2 Assets"
-                            Click="Save_Button_ClickAsync" Margin="5" />
+                    Grid.Column="1" 
+                    Style="{StaticResource myButton}"
+                    Content="&#xE8FB;" Width="75" 
+                    FontFamily="Segoe MDL2 Assets"
+                    Click="Save_Button_ClickAsync"
+                    Margin="5" />
             <Button x:Name="Cancel_Button" Width="75" 
-                            Grid.Row="2"
-                            Grid.Column="2"
-                            Margin="5"
-                            FontFamily="Segoe MDL2 Assets"
-                            Content="&#xE106;"
-                            Click="Cancel_Button_Click"
-                            FontSize="{StaticResource MediomFontSize}"
-                            Style="{StaticResource myButton}" />
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="5"
+                    FontFamily="Segoe MDL2 Assets"
+                    Content="&#xE106;"
+                    Click="Cancel_Button_Click"
+                    FontSize="{StaticResource MediomFontSize}"
+                    Style="{StaticResource myButton}" />
+            <Button x:Name="RandomMap_Button" Width="75" 
+                    Grid.Row="2"
+                    Grid.Column="3"
+                    Margin="5"
+                    Padding="8,2,8,2"
+                    Content="Random"
+                    Click="RandomMap_Button_Click"
+                    FontSize="{StaticResource MediomFontSize}"
+                    Style="{StaticResource myButton}" />
             <Button x:Name="Info_Button"
                     Grid.Row="2"
                     Grid.Column="3"
@@ -395,9 +407,7 @@
                                   RightTapped="canvascontroll_RightTapped"
                                   Tapped="canvascontroll_Tapped"
                                   Canvas.ZIndex="2" >
-
             </canvas:CanvasControl >
-
         </Grid>
 
         <StackPanel 
@@ -448,7 +458,7 @@
                 Content="{x:Bind SearchTool.SelectedSearchSpeed, Mode=OneWay}"
                 FontFamily="arial"
                 Click="Speed_Button_Click" />
-            
+
             <Button
                 x:Name="Tree_Button"
                 Padding="5"
