@@ -36,7 +36,8 @@ namespace Search.Views
 
         bool drawPath, drawCorrentRoad, drawAnimation;
         int speed, treePathCount, treePathChildCount, newNodeNameCount;
-        float canvasWidth, canvasHeight, blockWidth, blockHeight, circleRadius, canvasWidthMargin, canvasHeightMargin, sThickness, mThickness, lThickness, xlThinkness;
+        float canvasWidth, canvasHeight, blockWidth, blockHeight, circleRadius, sCircleRadius, canvasWidthMargin, canvasHeightMargin, 
+            sThickness, mThickness, lThickness;
         float[] xAxis, yAxis;
 
         Node sL, gL;
@@ -308,7 +309,8 @@ namespace Search.Views
                     }
                 }
 
-                if (!SearchTool.ConnectingNodeTogleEnabled)
+                // Draw free locations 
+                if(nodes.Count < 26)
                 {
                     foreach (var x in xAxis)
                     {
@@ -323,7 +325,7 @@ namespace Search.Views
                                 }
                             }
                             if (showFreeLocaion)
-                                args.DrawingSession.DrawCircle(x, y, 2 * circleRadius / 3, Colors.SteelBlue, mThickness);
+                                args.DrawingSession.DrawCircle(x, y, sCircleRadius, Colors.SteelBlue, mThickness);
                         }
                     }
                 }
@@ -343,25 +345,24 @@ namespace Search.Views
                     }
                 }
 
+                // Draw the selected Nodes and Available Nodes That can be Connected
                 if (selectedNode != null)
                 {
-                    if (SearchTool.ConnectingNodeTogleEnabled)
+                    foreach (var node in nodes)
                     {
-                        foreach (var node in nodes)
+                        bool busy = false;
+                        foreach (var busyNode in busyLoactions)
                         {
-                            bool busy = false;
-                            foreach (var busyNode in busyLoactions)
+                            if (node == busyNode)
                             {
-                                if (node == busyNode)
-                                {
-                                    busy = true;
-                                    break;
-                                }
+                                busy = true;
+                                break;
                             }
-                            if (!busy)
-                                args.DrawingSession.DrawCircle(xAxis[node.X], yAxis[node.Y], circleRadius, Colors.Green, mThickness);
                         }
+                        if (!busy)
+                            args.DrawingSession.DrawCircle(xAxis[node.X], yAxis[node.Y], circleRadius, Colors.Green, mThickness);
                     }
+
                     args.DrawingSession.DrawCircle(xAxis[selectedNode.X], yAxis[selectedNode.Y], circleRadius, Colors.White, mThickness);
                 }
             }
@@ -389,7 +390,7 @@ namespace Search.Views
             sThickness = circleRadius / 10;
             mThickness = circleRadius / 8;
             lThickness = circleRadius / 4;
-
+            sCircleRadius = circleRadius - sThickness;
             xAxis = new float[10] { canvasWidthMargin, blockWidth + canvasWidthMargin, (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin, (9 * blockWidth) + canvasWidthMargin };
             yAxis = new float[5] { canvasHeightMargin, blockHeight + canvasHeightMargin, (2 * blockHeight) + canvasHeightMargin, (3 * blockHeight) + canvasHeightMargin, (4 * blockHeight) + canvasHeightMargin };
         }
@@ -402,7 +403,7 @@ namespace Search.Views
                 var yTappedLoacation = (float)e.GetPosition(canvascontroll).Y;
                 var xyIndex = GetXYAxis(xTappedLoacation, yTappedLoacation);
                 bool exist = false;
-                // select the node if its exist on the board at the tap location
+                // Selec    t the node if its exist on the board at the tap location
                 if (xyIndex.Item1 != -1)
                 {
                     foreach (var node in nodes)
@@ -410,18 +411,16 @@ namespace Search.Views
                         if (node.X == xyIndex.Item1 && node.Y == xyIndex.Item2)
                         {
                             exist = true;
-
                             pSelectedNode = selectedNode;
                             selectedNode = node;
-                            //canvascontroll.Invalidate();
                             break;
                         }
                     }
-                    // if I am adding nodes
-                    if (!SearchTool.ConnectingNodeTogleEnabled)
+
+                    // Add new node to the board if it's not exist at the tap location
+                    if (!exist)
                     {
-                        // add new node to the board if it's not exist at the tap location
-                        if (!exist && (newNodeNameCount < letters.Count || removedLetters.Count > 0))
+                        if (newNodeNameCount < letters.Count || removedLetters.Count > 0)
                         {
                             bool showFreeLocaion = true;
                             foreach (var line in Lines)
@@ -446,22 +445,23 @@ namespace Search.Views
                                 }
                                 selectedNode.ConnectedNodes = new List<Node>();
                                 nodes.Add(selectedNode);
-                                canvascontroll.Invalidate();
+                                FillAvailableNodeToConnect(selectedNode);
                             }
                         }
+                        else
+                            selectedNode = null;
                     }
-                    // if I am connecting the nodes!
+                    // Connect Two or More Nodes
                     else
                     {
-                        // check if the previous node and the selected node are defferent
                         if (selectedNode != null && pSelectedNode != null && selectedNode != pSelectedNode)
                         {
-                            GetAvailableNodeToConnect2(pSelectedNode);
+                            FillAvailableNodeToConnect(pSelectedNode);
                             bool sucssefullConnected = ConnectTwoNodeAndBetween(selectedNode, pSelectedNode);
-                            if(sucssefullConnected)
+                            if (sucssefullConnected)
                                 selectedNode = pSelectedNode;
-                            
-                            GetAvailableNodeToConnect2(selectedNode);
+
+                            FillAvailableNodeToConnect(selectedNode);
                         }
                         else if (exist && selectedNode == pSelectedNode)
                         {
@@ -469,17 +469,15 @@ namespace Search.Views
                         }
                         else
                         {
-                            GetAvailableNodeToConnect2(selectedNode);
+                            FillAvailableNodeToConnect(selectedNode);
                         }
-                        canvascontroll.Invalidate();
                     }
                 }
                 else
                 {
                     selectedNode = null;
-                    canvascontroll.Invalidate();
                 }
-                
+                canvascontroll.Invalidate();
             }
         }
 
@@ -543,10 +541,10 @@ namespace Search.Views
 
         private void ConnectNodes_Button_Click(object sender, RoutedEventArgs e)
         {
-            GetAvailableNodeToConnect2(selectedNode);
+            FillAvailableNodeToConnect(selectedNode);
             canvascontroll.Invalidate();
         }
-        
+
         private void AddNewMap_ButtonClick(object sender, RoutedEventArgs e)
         {
             ClearSearchAndAnimation();
@@ -611,7 +609,7 @@ namespace Search.Views
             }
             SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, speed);
         }
-        
+
         private void RandomMap_Button_Click(object sender, RoutedEventArgs e)
         {
 
@@ -1046,10 +1044,10 @@ namespace Search.Views
             line.Point1.ConnectedNodes.Remove(line.Point2);
             line.Point2.ConnectedNodes.Remove(line.Point1);
             Lines.Remove(line);
-            GetAvailableNodeToConnect2(selectedNode);
+            FillAvailableNodeToConnect(selectedNode);
         }
 
-        private void GetAvailableNodeToConnect2(Node sNode)
+        private void FillAvailableNodeToConnect(Node sNode)
         {
             busyLoactions.Clear();
             if (sNode != null)
@@ -1186,7 +1184,7 @@ namespace Search.Views
                 Walks.Add(SearchedPaths[treePathCount][treePathChildCount]);
                 PreviousWalks.Add(SearchedPaths[treePathCount][treePathChildCount]);
                 treePathChildCount += 1;
-                if(Walks.Count > 1)
+                if (Walks.Count > 1)
                     AnimationsWalks.Add(new List<Node>(Walks));
                 BuildAnimationPaths();
             }
