@@ -8,12 +8,52 @@ namespace Search.Models.GraphSearch
 {
     public class Line
     {
+        private bool updateM;
+        private bool updateB;
+        private static float[] xAxis;
+        public static float[] XAxis
+        {
+            get { return xAxis; }
+            set
+            {
+                xAxis = value;
+            }
+        }
+
+        private static float[] yAxis;
+        public static float[] YAxis
+        {
+            get { return yAxis; }
+            set
+            {
+                yAxis = value;
+            }
+        }
+
         private float m;
+        public float M
+        {
+            get
+            {
+                m = (float)Math.Round(GetSlop(), 4);
+                return m;
+            }
+        }
+
         private float b;
+        public float B
+        {
+            get
+            {
+                b = (float)Math.Round(GetB(), 4);
+                return b;
+            }
+        }
+
         public Node Point1 { get; set; }
         public Node Point2 { get; set; }
 
-        public bool IfPointOnTheLine(float x, float y, float linethicknes, float[] xAxis, float[] yAxis)
+        public bool IfPointOnTheLine(float x, float y, float linethicknes)
         {
             float xSide = x;
             float ySide = y;
@@ -22,16 +62,16 @@ namespace Search.Models.GraphSearch
             bool YScope = (y >= yAxis[Point1.Y] && y <= yAxis[Point2.Y]) || (y <= yAxis[Point1.Y] && y >= yAxis[Point2.Y]);
             bool MScope;
             // vertical line
-            if (xAxis[Point1.X] == xAxis[Point2.X])
+            if (Point1.X == Point2.X)
             {
-                // xside = any x 
+                // xside = any x
                 xSide = xAxis[Point1.X];
                 MScope = x >= xSide - linethicknes && x <= xSide + linethicknes;
                 if (MScope && YScope)
                     return true;
             }
             // Horizontal line
-            else if (yAxis[Point1.Y] == yAxis[Point2.Y])
+            else if (Point1.Y == Point2.Y)
             {
                 xSide = yAxis[Point1.Y];
                 MScope = xSide + linethicknes > ySide && ySide > xSide - linethicknes;
@@ -49,19 +89,36 @@ namespace Search.Models.GraphSearch
             }
             return false;
         }
-        public float GetSlop(float[] xAxis, float[] yAxis)
+
+        private float GetSlop()
         {
-            if (xAxis[Point1.X] == xAxis[Point2.X])
-            {
-                return float.NaN;
+            return (float)(Point1.Y - Point2.Y) / (Point1.X - Point2.X);
+        }
+
+        private float GetB()
+        {
+            return (float)Point1.Y - (m * Point1.X);
+        }
+
+        public static bool nearlyEqual(float a, float b, float epsilon)
+        {
+            float absA = Math.Abs(a);
+            float absB = Math.Abs(b);
+            float diff = Math.Abs(a - b);
+
+            if (a == b)
+            { // shortcut, handles infinities
+                return true;
             }
-            else if(yAxis[Point1.Y] == yAxis[Point2.Y])
+            else if (a == 0 || b == 0 || (absA + absB < float.MinValue))
             {
-                return 0;
+                // a or b is zero or both are extremely close to it
+                // relative error is less meaningful here
+                return diff < (epsilon * float.MinValue);
             }
             else
-            {
-                return ((yAxis[Point1.Y] - yAxis[Point2.Y]) / (xAxis[Point1.X] - xAxis[Point2.X]));
+            { // use relative error
+                return diff / Math.Min((absA + absB), float.MaxValue) < epsilon;
             }
         }
     }

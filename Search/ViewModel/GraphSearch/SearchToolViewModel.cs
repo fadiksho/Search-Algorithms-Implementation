@@ -12,6 +12,13 @@ namespace Search.ViewModel.GraphSearch
 {
     public class SearchToolViewModel : INotifyPropertyChanged
     {
+        public SearchToolViewModel(string selectedSearchType)
+        {
+            this.selectedSearchType = selectedSearchType;
+            searchSpeed = 1000;
+            searchSpeedIcon = "\uEC49";
+        }
+
         public event EventHandler AnimationStoped;
         public void OnAnimationStoped()
         {
@@ -19,6 +26,7 @@ namespace Search.ViewModel.GraphSearch
         }
 
         public event EventHandler AnimationStarted;
+
         public void OnAnimationStarted()
         {
             AnimationStarted?.Invoke(this, EventArgs.Empty);
@@ -39,11 +47,26 @@ namespace Search.ViewModel.GraphSearch
             }
             set
             {
-                animateMoveNumber = value;
-                OnAnimateMoveChanged(value);
+                if (animateMoveNumber != value)
+                {
+                    animateMoveNumber = value;
+                    OnAnimateMoveChanged(value);
+                }
+                    
             }
         }
 
+        private string animationPlayButtonToolTip;
+        public string AnimationPlayButtonToopTip
+        {
+            get { return animationPlayButtonToolTip; }
+            set
+            {
+                animationPlayButtonToolTip = value;
+                OnPropertyChanged();
+            }
+        }
+        
         private bool isAnimationAvailable;
         public bool IsAnimationAvailable
         {
@@ -52,13 +75,8 @@ namespace Search.ViewModel.GraphSearch
             {
                 isAnimationAvailable = value;
                 OnPropertyChanged();
+                
             }
-        }
-
-        public SearchToolViewModel(string selectedSearchType, string selectedSearchSpeed)
-        {
-            this.selectedSearchType = selectedSearchType;
-            this.SelectedSearchSpeed = selectedSearchSpeed;
         }
 
         private string selectedSearchType;
@@ -106,16 +124,11 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private string selectedSearchSpeed;
-        public string SelectedSearchSpeed
-        {
-            get { return selectedSearchSpeed; }
-            set
-            {
-                selectedSearchSpeed = value;
-                OnPropertyChanged();
-            }
-        }
+        private int searchSpeed;
+        public int SearchSpeed { get { return searchSpeed; } }
+
+        private string searchSpeedIcon;
+        public string SearchSpeedIcon { get { return searchSpeedIcon; } }
 
         private string newMapName;
         public string NewMapName
@@ -123,7 +136,7 @@ namespace Search.ViewModel.GraphSearch
             get { return newMapName; }
             set
             {
-                if(newMapName !=value)
+                if (newMapName != value)
                 {
                     newMapName = value;
                     OnPropertyChanged();
@@ -131,7 +144,7 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private string newMapNameValidation;    
+        private string newMapNameValidation;
         public string NewMapNameValidation
         {
             get { return newMapNameValidation; }
@@ -159,6 +172,10 @@ namespace Search.ViewModel.GraphSearch
                 if (selectedMap != value)
                 {
                     selectedMap = value;
+                    if (selectedMap != null)
+                        ShowMap = true;
+                    else
+                        ShowMap = false;
                     OnPropertyChanged();
                 }
 
@@ -184,52 +201,46 @@ namespace Search.ViewModel.GraphSearch
             {
                 showMap = value;
                 OnPropertyChanged();
+                OnPropertyChanged("ShowCustomMapTool");
             }
         }
 
-        public bool ShowDiagnostic
-        {
-            get { return !showCustomMapTool; }
-        }
+        //public bool ShowDiagnostic
+        //{
+        //    get { return !showCustomMapTool; }
+        //}
 
         private bool showCustomMapTool;
         public bool ShowCustomMapTool
         {
-            get { return showCustomMapTool; }
-            set
-            {
-                showCustomMapTool = value;
-                OnPropertyChanged();
-                OnPropertyChanged("ShowDiagnostic");
-            }
+            get { return !ShowMap; }
         }
 
-        private bool connectingNodeTogleEnabled;
-        public bool ConnectingNodeTogleEnabled
-        {
-            get { return connectingNodeTogleEnabled; }
-            set
-            {
-                if (connectingNodeTogleEnabled != value)
-                {
-                    connectingNodeTogleEnabled = value;
-                    OnPropertyChanged();
-                }
+        //private bool connectingNodeTogleEnabled;
+        //public bool ConnectingNodeTogleEnabled
+        //{
+        //    get { return connectingNodeTogleEnabled; }
+        //    set
+        //    {
+        //        if (connectingNodeTogleEnabled != value)
+        //        {
+        //            connectingNodeTogleEnabled = value;
+        //            OnPropertyChanged();
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
-        private bool deleteNodeButtonEnabled;
-        public bool DeleteNodeButtonEnabled
-        {
-            get { return deleteNodeButtonEnabled; }
-            set
-            {
-                deleteNodeButtonEnabled = value;
-                OnPropertyChanged();
-            }
-        }
-
+        //private bool deleteNodeButtonEnabled;
+        //public bool DeleteNodeButtonEnabled
+        //{
+        //    get { return deleteNodeButtonEnabled; }
+        //    set
+        //    {
+        //        deleteNodeButtonEnabled = value;
+        //        OnPropertyChanged();
+        //    }
+        //}
 
         private bool previousAnimateButtonEnabled;
         public bool PreviousAnimateButtonEnabled
@@ -266,8 +277,10 @@ namespace Search.ViewModel.GraphSearch
 
         public ObservableCollection<string> SearchTypes { get; set; } =
             new ObservableCollection<string> { "DEPTH FIRST", "BREADTH FIRST", "DEPTH FIRST WITH FILTER" };
+
         public ObservableCollection<string> StartLocations { get; set; }
             = new ObservableCollection<string>();
+
         public ObservableCollection<string> GoolLocations { get; set; }
             = new ObservableCollection<string>();
 
@@ -285,13 +298,31 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        public ObservableCollection<string> SearchSpeed { get; set; } =
-            new ObservableCollection<string>() { "X1", "X2", "X4" };
-
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        internal void ChangeSpeed()
+        {
+            if (searchSpeed == 1000)
+            {
+                searchSpeedIcon = "\uEC4A";
+                searchSpeed = 250;
+            }
+            else if (searchSpeed == 2000)
+            {
+                searchSpeedIcon = "\uEC49";
+                searchSpeed = 1000;
+            }
+            else if (searchSpeed == 250)
+            {
+                searchSpeedIcon = "\uEC48";
+                searchSpeed = 2000;
+            }
+            OnPropertyChanged("SearchSpeed");
+            OnPropertyChanged("SearchSpeedIcon");
         }
     }
 }

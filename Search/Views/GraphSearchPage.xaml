@@ -103,12 +103,6 @@
                         <Setter Target="MapName_TextBox.Padding" Value="4"/>
                         <Setter Target="MapName_TextBox.Margin" Value="2"/>
 
-                        <Setter Target="ConnectNodes_RadioButton.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        <Setter Target="ConnectNodes_RadioButton.Height" Value="{StaticResource SmallHeight}"/>
-
-                        <Setter Target="AddNodes_RadioButton.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        <Setter Target="AddNodes_RadioButton.Height" Value="{StaticResource SmallHeight}"/>
-
 
                         <Setter Target="Save_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="Save_Button.Padding" Value="3"/>
@@ -119,12 +113,18 @@
                         <Setter Target="Cancel_Button.Padding" Value="3"/>
                         <Setter Target="Cancel_Button.Margin" Value="2"/>
 
+                        <Setter Target="Info_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <!--<Setter Target="Info_Button.Padding" Value="3"/>-->
+                        <Setter Target="Info_Button.Margin" Value="2"/>
+
                         <Setter Target="PreviousStep_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Play_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="NextStep_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Tree_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="AddMap_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Speed_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
+
+
 
                         <!--#endregion-->
 
@@ -164,7 +164,7 @@
         </Grid.ColumnDefinitions>
         <Grid
             x:Name="toolcontainer"
-            Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}"
+            Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}"
             Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -304,18 +304,16 @@
         </Grid>
 
         <StackPanel Orientation="Horizontal" Grid.Row="1"
-                    Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}">
+                    Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}">
             <TextBlock Text="Searched Path:"
                        Foreground="{StaticResource CustomWhiteBrashColor}" 
                        Margin="5" VerticalAlignment="Center">
                 <Run Text="{x:Bind SearchTool.SearchedPathCount, Mode=OneWay}"
                      Foreground="{StaticResource CustomWhiteBrashColor}" />
             </TextBlock>
-
-
         </StackPanel>
-
-        <Grid Grid.Row="2" Margin="5"
+        
+        <Grid Grid.Row="2" Margin="5" Grid.ColumnSpan="2"
               Visibility="{x:Bind SearchTool.ShowCustomMapTool, Mode=OneWay}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -337,7 +335,7 @@
                 Text="{x:Bind SearchTool.NewMapNameValidation, Mode=OneWay}"
                 Visibility="{x:Bind SearchTool.IsNewMapNameValidationEnabled, Mode=OneWay}"
                 FontSize="{StaticResource MediomFontSize}"/>
-            <RadioButton 
+            <!--<RadioButton 
                 x:Name="AddNodes_RadioButton" Grid.Row="1" Content="Add Nodes" 
                 Tag="Green" IsChecked="True"
                 Click="ConnectNodes_Button_Click"
@@ -349,7 +347,7 @@
                 FontSize="{StaticResource MediomFontSize}"
                 Style="{StaticResource MyRadioButton}"
                 IsChecked="{x:Bind SearchTool.ConnectingNodeTogleEnabled, Mode=TwoWay}"
-                />
+                />-->
 
             <TextBox Grid.Row="1" x:Name="MapName_TextBox" Grid.Column="1"
                      Grid.ColumnSpan="4"
@@ -377,22 +375,15 @@
                     Click="Cancel_Button_Click"
                     FontSize="{StaticResource MediomFontSize}"
                     Style="{StaticResource myButton}" />
-            <Button x:Name="RandomMap_Button" Width="75" 
-                    Grid.Row="2"
-                    Grid.Column="3"
-                    Margin="5"
-                    Padding="8,2,8,2"
-                    Content="Random"
-                    Click="RandomMap_Button_Click"
-                    FontSize="{StaticResource MediomFontSize}"
-                    Style="{StaticResource myButton}" />
             <Button x:Name="Info_Button"
                     Grid.Row="2"
                     Grid.Column="3"
-                    Width="20"
+                    Content="&#xEA1F;"
+                    FontFamily="Segoe MDL2 Assets"
                     HorizontalAlignment="Right"
-                    Click="Info_Button_ClickAsync"
-                    Style="{StaticResource InfoButtonStyle}">
+                    Style="{StaticResource myButton}"
+                    Click="Info_Button_ClickAsync" >
+
             </Button>
 
         </Grid>
@@ -417,21 +408,27 @@
             Width="35"
             Height="Auto"
             Margin="5" 
-            Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}" >
+            Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}" >
             <Button 
                 x:Name="PreviousStep_Button"
+                Width="35"
+                Height="35"
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"                
                 IsEnabled="{x:Bind SearchTool.PreviousAnimateButtonEnabled, Mode=OneWay}"
+                ToolTipService.ToolTip="Previous Step"
                 Click="PreviousStep_Button_Click">
                 <SymbolIcon Symbol="Previous"/>
             </Button>
             <Button
                 x:Name="Play_Button"
+                Width="35"
+                Height="35"
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"                
+                ToolTipService.ToolTip="{x:Bind SearchTool.AnimationPlayButtonToopTip, Mode=OneWay}"
                 IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}"
                 Click="Play_Button_Click">
                 <SymbolIcon x:Name="play" Symbol="Play"/>
@@ -439,48 +436,62 @@
 
             <Button
                 x:Name="NextStep_Button"
+                Width="35"
+                Height="35"
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"                
                 IsEnabled="{x:Bind SearchTool.NextAnimateButtonEnabled,Mode=OneWay}"
+                ToolTipService.ToolTip="Next Step"
                 Click="NextStep_Button_Click">
                 <SymbolIcon Symbol="Next" />
             </Button>
             <Button
                 x:Name="Speed_Button"
-                Padding="7"
+                Width="35"
+                Height="35"
+                Padding="0"
+                VerticalContentAlignment="Center"
                 HorizontalContentAlignment="Center"
-                Width="{Binding Path=Width, ElementName=SearchMediaToolContainer}"
-                Height="{Binding Path=Height, ElementName=SearchMediaToolContainer}"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"
-                FontSize="{StaticResource MediomFontSize}"
-                Content="{x:Bind SearchTool.SelectedSearchSpeed, Mode=OneWay}"
-                FontFamily="arial"
-                Click="Speed_Button_Click" />
+                FontSize="22"
+                ToolTipService.ToolTip="Speed"
+                FontFamily="Segoe MDL2 Assets"
+                Content="{x:Bind SearchTool.SearchSpeedIcon, Mode=OneWay}"
+                Click="Speed_Button_Click">
+            </Button>
 
             <Button
                 x:Name="Tree_Button"
+                Width="35"
+                Height="35"
                 Padding="5"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource treeInfoButtonStyle}"
                 Click="{x:Bind Tree_Button_ClickAsync}"
-                IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}">
+                ToolTipService.ToolTip="Tree Choices"
+                IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}" RenderTransformOrigin="0.5,0.5" >
+                <Button.RenderTransform>
+                    <CompositeTransform Rotation="180"/>
+                </Button.RenderTransform>
             </Button>
-
         </StackPanel>
+        
         <Button
-                x:Name="AddMap_Button"
-                Grid.Row="4"
-                Grid.Column="1"
-                Padding="10"
-                Margin="{StaticResource MediomMargin}"
-                FontSize="{StaticResource MediomFontSize}" 
-                Click="AddNewMap_ButtonClick"
-                Style="{StaticResource CircleButtonStyle}"
-                Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}">
+            x:Name="AddMap_Button"
+            Grid.Row="4"
+            Grid.Column="1"
+            Padding="10"
+            Margin="{StaticResource MediomMargin}"
+            FontSize="{StaticResource MediomFontSize}" 
+            Click="AddNewMap_ButtonClick"
+            Style="{StaticResource CircleButtonStyle}"
+            Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}"
+            ToolTipService.ToolTip="Design Your Map">
             <SymbolIcon Symbol="Add" />
         </Button>
+        
         <!--<floatingControll:FloatingContent Boundary="Parent" Grid.Row="4" Canvas.ZIndex="10"
                                    Width="50" Height="50" HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom">

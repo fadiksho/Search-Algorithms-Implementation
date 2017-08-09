@@ -3,6 +3,7 @@ using Search.Models;
 using Search.Models.GraphSearch;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -26,15 +27,14 @@ namespace Search
     /// </summary>
     public sealed partial class TreeVisuals : Page
     {
-        List<List<Node>> MySearchPath = new List<List<Node>>();
+        ObservableCollection<List<Node>> MySearchPath = new ObservableCollection<List<Node>>();
         Dictionary<string, float> xAxis = new Dictionary<string, float>();
         List<float> yAxis = new List<float>();
         float canvasWidth, canvasHeight;
         float yScale = 100;
         float xScale = 100;
         int yLayer = 1;
-
-
+        
         public TreeVisuals()
         {
             this.InitializeComponent();
@@ -57,7 +57,7 @@ namespace Search
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            MySearchPath = (List<List<Node>>)e.Parameter;
+            MySearchPath = (ObservableCollection<List<Node>>)e.Parameter;
             foreach (var item in MySearchPath)
             {
                 item.Reverse();
