@@ -12,9 +12,15 @@
         <Grid.Background>
             <ImageBrush Stretch="Fill" Opacity="0.8" ImageSource="Assets/Images/earth1280x640.jpg"/>
         </Grid.Background>
-        <ScrollViewer ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Visible">
+        <ScrollViewer
+            HorizontalScrollMode="Enabled"
+            ZoomMode="Enabled"
+            ScrollViewer.HorizontalScrollBarVisibility="Visible"
+            ScrollViewer.VerticalScrollBarVisibility="Visible">
             <canvas:CanvasControl x:Name="mycanvas" 
-                                  Draw="Mycanvas_Draw"/>
+                                  Draw="Mycanvas_Draw" Width="1280" Height="1024">
+                
+            </canvas:CanvasControl>
         </ScrollViewer>
         
     </Grid>

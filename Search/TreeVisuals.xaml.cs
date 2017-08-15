@@ -4,6 +4,7 @@ using Search.Models.GraphSearch;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -28,13 +29,14 @@ namespace Search
     public sealed partial class TreeVisuals : Page
     {
         ObservableCollection<List<Node>> MySearchPath = new ObservableCollection<List<Node>>();
+        List<Node> tree = new List<Node>();
         Dictionary<string, float> xAxis = new Dictionary<string, float>();
         List<float> yAxis = new List<float>();
-        float canvasWidth, canvasHeight;
-        float yScale = 100;
-        float xScale = 100;
+        float canvasWidth, canvasHeight, canvasWidthMargin, canvasHeightMargin,
+            blockWidth, blockHeight, circleRadius;
+
         int yLayer = 1;
-        
+
         public TreeVisuals()
         {
             this.InitializeComponent();
@@ -46,10 +48,10 @@ namespace Search
             foreach (var path in MySearchPath)
             {
                 yLayer = 1;
-                for (int i = path.Count - 1; i > 0; i--)
+                for (int i = 0; i < path.Count; i++)
                 {
                     counter += 1;
-                    args.DrawingSession.DrawText(path[i].NodeName, xScale * i, yScale * yLayer, Colors.Red);
+                    args.DrawingSession.DrawText(path[i].NodeName, blockWidth * (i + 1), blockHeight * (yLayer), Colors.Red);
 
                     yLayer++;
                 }
@@ -57,17 +59,40 @@ namespace Search
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            MySearchPath = (ObservableCollection<List<Node>>)e.Parameter;
-            foreach (var item in MySearchPath)
+            ObservableCollection<List<Node>> paths = (ObservableCollection<List<Node>>)e.Parameter;
+
+            int deepTreeLength = paths.Count;
+            for (int i = 0; i < paths.Count; i++)
             {
-                item.Reverse();
+                List<Node> nodes = new List<Node>();
+                if (paths[i].Count > deepTreeLength)
+                    deepTreeLength = paths[i].Count;
+                for (int j = 0; j < paths[i].Count; j++)
+                {
+                    Node node = paths[i][j].GetCopy();
+                    node.ConnectedNodes.Clear();
+                    nodes.Add(node);
+                }
+                MySearchPath.Add(nodes);
             }
         }
 
         private void Grid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+
             canvasWidth = (float)container.ActualWidth;
             canvasHeight = (float)container.ActualHeight;
+
+            canvasWidthMargin = canvasWidth / 30;
+            canvasHeightMargin = canvasHeight / 15;
+
+            blockWidth = (canvasWidth - 2 * canvasWidthMargin) / 9;
+            blockHeight = (canvasHeight - 2 * canvasHeightMargin) / 4;
+
+            if (blockHeight > blockWidth)
+                circleRadius = blockWidth / 5;
+            else
+                circleRadius = blockHeight / 5;
         }
     }
 }
