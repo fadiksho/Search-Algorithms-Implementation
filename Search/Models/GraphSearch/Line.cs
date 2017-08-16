@@ -8,8 +8,6 @@ namespace Search.Models.GraphSearch
 {
     public class Line
     {
-        private bool updateM;
-        private bool updateB;
         private static float[] xAxis;
         public static float[] XAxis
         {

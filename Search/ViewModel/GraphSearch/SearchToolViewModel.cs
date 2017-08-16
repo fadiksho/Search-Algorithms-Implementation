@@ -205,12 +205,6 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        //public bool ShowDiagnostic
-        //{
-        //    get { return !showCustomMapTool; }
-        //}
-
-        private bool showCustomMapTool;
         public bool ShowCustomMapTool
         {
             get { return !ShowMap; }

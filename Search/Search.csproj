@@ -103,6 +103,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\BindableBase.cs" />
+    <Compile Include="Models\GraphSearch\DesignMapHelper.cs" />
     <Compile Include="Models\GraphSearch\Line.cs" />
     <Compile Include="Models\GraphSearch\Node.cs" />
     <Compile Include="Models\GraphSearch\Road.cs" />

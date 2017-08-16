@@ -24,7 +24,6 @@ namespace Search.Models.GraphSearch
             newNode.NodeName = this.NodeName;
             newNode.StartPoint = this.StartPoint;
             newNode.GoolPoint = this.GoolPoint;
-
             return newNode;
         }
 

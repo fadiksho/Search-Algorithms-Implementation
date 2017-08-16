@@ -31,10 +31,9 @@ namespace Search.Views
     public sealed partial class GraphSearchPage : Page
     {
         public SearchToolViewModel SearchTool { get; set; }
+        public DesignMapHelper DesignMapHelper { get; set; }
 
-        #region feilds
-
-        bool drawCorrentRoad, drawAnimation, stop;
+        bool drawCorrentRoad, drawAnimation;
         int newNodeNameCount;
         float canvasWidth, canvasHeight, blockWidth, blockHeight,
             circleRadius, sCircleRadius, canvasWidthMargin, canvasHeightMargin,
@@ -46,39 +45,41 @@ namespace Search.Views
             HorizontalAlignment = CanvasHorizontalAlignment.Center,
             VerticalAlignment = CanvasVerticalAlignment.Center
         };
+
         float[] xAxis, yAxis;
-        Node sL, gL;
-        Node selectedNode, pSelectedNode;
+        Node sL, gL, selectedNode, pSelectedNode;
         List<Node> nodes = new List<Node>();
         List<Map> JsonMaps;
-        HashSet<Node> busyLoactions = new HashSet<Node>();
 
-        ObservableCollection<Road> CorrectPaths { get; set; } = new ObservableCollection<Road>();
-        ObservableCollection<List<Node>> SearchedPaths { get; set; } = new ObservableCollection<List<Node>>();
-        ObservableCollection<List<Node>> AnimationsWalks { get; set; } = new ObservableCollection<List<Node>>();
-        HashSet<Node> PreviousWalks { get; set; } = new HashSet<Node>();
-        List<Node> Walks { get; set; } = new List<Node>();
+        ObservableCollection<List<Node>> CorrectPaths { get; set; } = new ObservableCollection<List<Node>>();
+        List<List<Node>> SearchedPaths { get; set; } = new List<List<Node>>();
 
-        List<string> letters = new List<string>();
-        List<string> removedLetters = new List<string>();
-        List<Line> Lines = new List<Line>();
-        Stack<Node> stackNodes = new Stack<Node>();
-        HashSet<Node> passedNodes = new HashSet<Node>();
+        private ObservableCollection<List<Node>> animationWalks;
+        ObservableCollection<List<Node>> AnimationsWalks
+        {
+            get { return animationWalks; }
+            set
+            {
+                if (value != null && value.Count > 1)
+                {
+                    SearchTool.IsAnimationAvailable = true;
+                }
+                animationWalks = value;
+            }
+        }
+        
         DispatcherTimer SearchSpeedTick = new DispatcherTimer();
-
-        Random rnd = new Random();
-
-        #endregion
-
+        
         public GraphSearchPage()
         {
             this.InitializeComponent();
             SearchTool = new SearchToolViewModel("DEPTH FIRST");
+            DesignMapHelper = new DesignMapHelper();
             SearchSpeedTick.Tick += SearchSpeedTick_Tick;
             SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, SearchTool.SearchSpeed);
             SearchTool.animateMoveChanged += SearchTool_animateMoveChanged;
             CorrectPaths.CollectionChanged += CorrectPathss_CollectionChanged;
-            SearchedPaths.CollectionChanged += MySearchPath_CollectionChanged;
+            AnimationsWalks = new ObservableCollection<List<Node>>();
             AnimationsWalks.CollectionChanged += AnimationsWalks_CollectionChanged;
         }
 
@@ -86,7 +87,7 @@ namespace Search.Views
         {
             if (road.HeadNode.GoolPoint)
             {
-                CorrectPaths.Add(road);
+                CorrectPaths.Add(road.PassedRoad);
                 SearchedPaths.Add(road.PassedRoad);
                 return;
             }
@@ -142,7 +143,7 @@ namespace Search.Views
                     SearchedPaths.Add(extendedroad.PassedRoad);
                     if (extendedroad.HeadNode.GoolPoint)
                     {
-                        CorrectPaths.Add(extendedroad);
+                        CorrectPaths.Add(extendedroad.PassedRoad);
                         //return;
                     }
                 }
@@ -176,35 +177,8 @@ namespace Search.Views
             }
         }
 
-        private bool DepthFirstSearchWithFiltering(Node sNode, Node gNode)
-        {
-            if (sNode == gNode)
-                return true;
-            else
-            {
-                passedNodes.Add(sNode);
-                foreach (var node in sNode.ConnectedNodes)
-                {
-                    var passed = false;
-                    foreach (var passedNode in passedNodes)
-                    {
-                        if (passedNode == node)
-                        {
-                            passed = true;
-                            break;
-                        }
-                    }
-                    if (!passed)
-                        stop = DepthFirstSearchWithFiltering(node, gNode);
-                    if (stop)
-                        break;
-                }
-            }
-            return stop;
-        }
-
         private void Search_Button_Click(object sender, RoutedEventArgs e)
-        {   
+        {
             if (sL != null && gL != null && sL != gL)
             {
                 ClearSearchAndAnimation();
@@ -235,44 +209,23 @@ namespace Search.Views
                     }
                     BreadthFirst(road);
                 }
-                
-                BuildAnimation3(SearchedPaths);
-                for (int i = 1; i < AnimationsWalks.Count; i++)
-                {
-                    var walk = AnimationsWalks[i];
-                    for (int j = i; j < AnimationsWalks.Count; j++)
-                    {
-                        if (i != j && walk.Count == AnimationsWalks[j].Count)
-                        {
-                            bool matched = true;
-                            for (int k = walk.Count-1; k >= 0; k--)
-                            {
-                                if(walk[k].NodeName != AnimationsWalks[j][k].NodeName)
-                                {
-                                    matched = false;
-                                    break;
-                                }
-                            }
-                            if(matched)
-                                AnimationsWalks.RemoveAt(j);
-                        }
-                    }
-                }
-
-                
+                var watch = Stopwatch.StartNew();
+                AnimationsWalks = GetAnimationMoves(SearchedPaths);
+                watch.Stop();
+                Debug.WriteLine($"Genrate Animation Move Time {watch.ElapsedMilliseconds}");
 
                 startAnimation();
 
-                foreach (var item in SearchedPaths)
-                {
-                    foreach (var item2 in item)
-                    {
-                        Debug.Write(item2.NodeName + " ");
-                    }
-                    Debug.WriteLine(" ");
-                }
-                Debug.WriteLine("___________________________________________________________________________________________________________________");
-                
+                //foreach (var item in SearchedPaths)
+                //{
+                //    foreach (var item2 in item)
+                //    {
+                //        Debug.Write(item2.NodeName + " ");
+                //    }
+                //    Debug.WriteLine(" ");
+                //}
+                //Debug.WriteLine("_______________________________");
+
             }
         }
 
@@ -286,35 +239,15 @@ namespace Search.Views
                 // Draw the Corrent Path
                 if (SearchTool.FindedCorrectPath && drawCorrentRoad)
                 {
-                    for (int i = 1; i < CorrectPaths[0].PassedRoad.Count; i++)
+                    for (int i = 1; i < CorrectPaths[0].Count; i++)
                     {
                         args.DrawingSession.DrawLine(
-                            xAxis[CorrectPaths[0].PassedRoad[i].X],
-                            yAxis[CorrectPaths[0].PassedRoad[i].Y],
-                            xAxis[CorrectPaths[0].PassedRoad[i - 1].X],
-                            yAxis[CorrectPaths[0].PassedRoad[i - 1].Y],
+                            xAxis[CorrectPaths[0][i].X],
+                            yAxis[CorrectPaths[0][i].Y],
+                            xAxis[CorrectPaths[0][i - 1].X],
+                            yAxis[CorrectPaths[0][i - 1].Y],
                             Colors.Green,
                             lThickness);
-
-                        //if (!drawAnimation)
-                        //{
-                        //    args.DrawingSession.DrawText(
-                        //        i.ToString(), 
-                        //        xAxis[CorrectPaths[0].PassedRoad[i - 1].X] + circleRadius + 3,
-                        //        yAxis[CorrectPaths[0].PassedRoad[i - 1].Y] - circleRadius - 3,
-                        //        Colors.White,
-                        //        textformat);
-
-                        //    if (i == CorrectPaths[0].PassedRoad.Count - 1)
-                        //    {
-                        //        args.DrawingSession.DrawText(
-                        //            (i + 1).ToString(), 
-                        //            xAxis[CorrectPaths[0].PassedRoad[i].X] + circleRadius + 3,
-                        //            yAxis[CorrectPaths[0].PassedRoad[i].Y] - circleRadius - 3,
-                        //            Colors.White, 
-                        //            textformat);
-                        //    }
-                        //}
                     }
                 }
                 // Draw the Searching Path
@@ -329,16 +262,16 @@ namespace Search.Views
                                 yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].Y],
                                 xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X],
                                 yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y],
-                                Colors.OrangeRed, 
+                                Colors.OrangeRed,
                                 lThickness);
                         }
                         else
                         {
                             args.DrawingSession.DrawLine(
                                 xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].X],
-                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].Y], 
+                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].Y],
                                 xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X],
-                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y], 
+                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y],
                                 Colors.Yellow,
                                 lThickness);
                         }
@@ -358,14 +291,14 @@ namespace Search.Views
                         {
                             args.DrawingSession.DrawCircle(
                                 xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].X],
-                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].Y], 
+                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i - 1].Y],
                                 circleRadius,
                                 Colors.YellowGreen, lThickness);
                             args.DrawingSession.DrawCircle(
-                                xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X], 
-                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y], 
-                                circleRadius, 
-                                Colors.Yellow, 
+                                xAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].X],
+                                yAxis[AnimationsWalks[SearchTool.AnimateMoveNumber][i].Y],
+                                circleRadius,
+                                Colors.Yellow,
                                 lThickness);
 
                         }
@@ -384,7 +317,7 @@ namespace Search.Views
                 // Draw free locations 
                 if (nodes.Count < 26)
                 {
-                    drawFreeLocations(args, xAxis, yAxis, Lines, Colors.SteelBlue, sCircleRadius, mThickness);
+                    drawFreeLocations(args, xAxis, yAxis, DesignMapHelper.Lines, Colors.SteelBlue, sCircleRadius, mThickness);
                 }
                 // Draw the Nodes
                 drawNodes(args, nodes, circleRadius, textformat);
@@ -394,7 +327,7 @@ namespace Search.Views
                     foreach (var node in nodes)
                     {
                         bool busy = false;
-                        foreach (var busyNode in busyLoactions)
+                        foreach (var busyNode in DesignMapHelper.BusyLocations)
                         {
                             if (node == busyNode)
                             {
@@ -410,19 +343,19 @@ namespace Search.Views
                                 circleRadius,
                                 Colors.Green,
                                 mThickness);
-                        } 
+                        }
                     }
 
                     args.DrawingSession.DrawCircle(
                         xAxis[selectedNode.X],
                         yAxis[selectedNode.Y],
-                        circleRadius, 
-                        Colors.White, 
+                        circleRadius,
+                        Colors.White,
                         mThickness);
                 }
             }
         }
-        
+
         private void container_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             canvasWidth = (float)CanvasContainer.ActualWidth;
@@ -462,7 +395,7 @@ namespace Search.Views
                 // Select the node if its exist on the board at the tap location
                 if (xyIndex.Item1 != -1)
                 {
-                    Node node = getIfExistOnMap(xyIndex.Item1, xyIndex.Item2);
+                    Node node = DesignMapHelper.GetNodeIfExistOnMap(xyIndex.Item1, xyIndex.Item2, nodes);
                     if (node != null)
                     {
                         exist = true;
@@ -472,10 +405,10 @@ namespace Search.Views
                     // Add new node to the board if it's not exist at the tap location
                     if (!exist)
                     {
-                        if (newNodeNameCount < letters.Count || removedLetters.Count > 0)
+                        if (newNodeNameCount < DesignMapHelper.Letters.Count || DesignMapHelper.RemovedLetters.Count > 0)
                         {
                             bool showFreeLocaion = true;
-                            foreach (var line in Lines)
+                            foreach (var line in DesignMapHelper.Lines)
                             {
                                 if (line.IfPointOnTheLine(xAxis[xyIndex.Item1], yAxis[xyIndex.Item2], circleRadius / 2))
                                 {
@@ -492,7 +425,7 @@ namespace Search.Views
 
                                 selectedNode.ConnectedNodes = new List<Node>();
                                 nodes.Add(selectedNode);
-                                FillAvailableNodeToConnect(selectedNode);
+                                DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
                             }
                         }
                         else
@@ -503,7 +436,8 @@ namespace Search.Views
                     {
                         if (selectedNode != null && pSelectedNode != null && selectedNode != pSelectedNode)
                         {
-                            bool sucssefullConnected = ConnectTwoNodeAndBetween(selectedNode, pSelectedNode);
+                            bool sucssefullConnected = DesignMapHelper.ConnectTwoNodeAndBetween(
+                                selectedNode, pSelectedNode, nodes, xAxis, yAxis, circleRadius);
                             if (sucssefullConnected)
                                 selectedNode = pSelectedNode;
                         }
@@ -511,7 +445,7 @@ namespace Search.Views
                         {
                             selectedNode = null;
                         }
-                        FillAvailableNodeToConnect(selectedNode);
+                        DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
                     }
                 }
                 else
@@ -537,13 +471,15 @@ namespace Search.Views
                     {
                         if (node.X == xyIndex.Item1 && node.Y == xyIndex.Item2)
                         {
-                            AddToRemovedList(node.NodeName);
+                            DesignMapHelper.AddToRemovedList(node.NodeName);
+                            
                             // cut all the road that lead to this node
                             foreach (var subNode in node.ConnectedNodes)
                             {
                                 subNode.ConnectedNodes.Remove(node);
                             }
-                            RemoveLine(node);
+
+                            DesignMapHelper.RemoveLine(node);
                             nodes.Remove(node);
                             if (selectedNode == node)
                                 selectedNode = null;
@@ -553,11 +489,12 @@ namespace Search.Views
                     }
                 }
                 // remove the line between the connected nodes
-                foreach (var line in Lines)
+                foreach (var line in DesignMapHelper.Lines)
                 {
                     if (line.IfPointOnTheLine(xTappedLoacation, yTappedLoacation, circleRadius / 2))
                     {
-                        DissConnectTwoNode(line);
+                        DesignMapHelper.DissConnectTwoNode(line);
+                        DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
                         canvascontroll.Invalidate();
                         break;
                     }
@@ -568,8 +505,8 @@ namespace Search.Views
         private void RemoveNode_Button_Click(object sender, RoutedEventArgs e)
         {
             nodes.Clear();
-            removedLetters.Clear();
-            Lines.Clear();
+            DesignMapHelper.RemovedLetters.Clear();
+            DesignMapHelper.Lines.Clear();
             selectedNode = null;
             newNodeNameCount = 0;
             canvascontroll.Invalidate();
@@ -582,7 +519,7 @@ namespace Search.Views
 
         private void ConnectNodes_Button_Click(object sender, RoutedEventArgs e)
         {
-            FillAvailableNodeToConnect(selectedNode);
+            DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
             canvascontroll.Invalidate();
         }
 
@@ -735,10 +672,12 @@ namespace Search.Views
                     }
                     button.IsEnabled = true;
                 }
+                throw new NullReferenceException();
             }
             catch (Exception ex)
             {
-
+                MessageDialog ms = new MessageDialog(ex.Message);
+                await ms.ShowAsync();
             }
 
 
@@ -755,7 +694,7 @@ namespace Search.Views
         {
             // stop drawing animation if it's drawings
             var selectedSearch = searchType_ComboBox.SelectedItem.ToString();
-            if(selectedSearch != SearchTool.SelectedSearchType)
+            if (selectedSearch != SearchTool.SelectedSearchType)
                 ClearSearchAndAnimation();
         }
 
@@ -816,7 +755,7 @@ namespace Search.Views
             {
                 newNodeNameCount = 0;
                 CleanCustomMapTool();
-                letters = GetAlphabeticallyLetters();
+                //designmaphelper.letters = designmaphelper.getalphabeticallyletters();
             }
             ClearSearchAndAnimation();
         }
@@ -829,7 +768,7 @@ namespace Search.Views
                 string path = ApplicationData.Current.LocalFolder.Path + "\\Maps.json";
                 if (!File.Exists(path))
                 {
-                    string jsonStringMaps = JsonConvert.SerializeObject(GetDefualtMaps(), new JsonSerializerSettings
+                    string jsonStringMaps = JsonConvert.SerializeObject(DesignMapHelper.GetDefualtMaps(), new JsonSerializerSettings
                     {
                         NullValueHandling = NullValueHandling.Ignore,
                         PreserveReferencesHandling = PreserveReferencesHandling.Objects
@@ -847,7 +786,7 @@ namespace Search.Views
             }
             catch
             {
-                SearchTool.Maps = new ObservableCollection<Map>(GetDefualtMaps());
+                SearchTool.Maps = new ObservableCollection<Map>(DesignMapHelper.GetDefualtMaps());
             }
             finally
             {
@@ -855,14 +794,6 @@ namespace Search.Views
             }
             watch3.Stop();
             Debug.WriteLine($"Loaded Time : {watch3.ElapsedMilliseconds}");
-        }
-
-        private void MySearchPath_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Reset)
-            {
-                PreviousWalks.Clear();
-            }
         }
 
         private void CorrectPathss_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -875,17 +806,12 @@ namespace Search.Views
             {
                 SearchedPaths.Clear();
                 AnimationsWalks.Clear();
-                Walks.Clear();
             }
         }
-        
+
         private void AnimationsWalks_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                SearchTool.IsAnimationAvailable = true;
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Reset)
+            if (e.Action == NotifyCollectionChangedAction.Reset)
             {
                 SearchTool.IsAnimationAvailable = false;
             }
@@ -954,229 +880,6 @@ namespace Search.Views
             SearchSpeedTick.Stop();
         }
 
-        private Tuple<int, int> GetXYAxis(float x, float y)
-        {
-            for (int i = 0; i < xAxis.Length; i++)
-            {
-                for (int j = 0; j < yAxis.Length; j++)
-                {
-                    if ((x > xAxis[i] - circleRadius && x < xAxis[i] + circleRadius) &&
-                            y > yAxis[j] - circleRadius && y < yAxis[j] + circleRadius)
-                    {
-                        return new Tuple<int, int>(i, j);
-                    }
-                }
-            }
-            return new Tuple<int, int>(-1, 0);
-        }
-
-        private List<string> GetAlphabeticallyLetters()
-        {
-            var query = Enumerable.Range(0, 26)
-                            .Select(i => ((char)('A' + i)).ToString()).ToList();
-            return query;
-        }
-
-        private void AddToRemovedList(string letter)
-        {
-            removedLetters.Add(letter);
-            removedLetters.Sort();
-        }
-
-        private string GetFromRemovedLetters()
-        {
-            string nodeName = removedLetters[0];
-            removedLetters.RemoveAt(0);
-            return nodeName;
-        }
-
-        private bool isFreeLocation(Node node)
-        {
-            bool free = true;
-            foreach (var busyNode in busyLoactions)
-            {
-                if (busyNode == node)
-                {
-                    free = false;
-                    break;
-                }
-            }
-            return free;
-        }
-
-        private void ConnectTwoNode(Node selectedNode, Node pSelectedNode)
-        {
-            bool isConnected = false;
-            foreach (var node in pSelectedNode.ConnectedNodes)
-            {
-                if (node == selectedNode)
-                {
-                    isConnected = true;
-                    break;
-                }
-            }
-            if (!isConnected)
-            {
-                Line line = new Line()
-                {
-                    Point1 = selectedNode,
-                    Point2 = pSelectedNode
-                };
-                selectedNode.ConnectedNodes.Add(pSelectedNode);
-                pSelectedNode.ConnectedNodes.Add(selectedNode);
-                Lines.Add(line);
-            }
-
-        }
-
-        private bool ConnectTwoNodeAndBetween(Node selectedNode, Node pSelectedNode)
-        {
-            bool succefullConnected = false;
-            if (isFreeLocation(selectedNode))
-            {
-                Line line = new Line()
-                {
-                    Point1 = selectedNode,
-                    Point2 = pSelectedNode
-                };
-                var linkedNodes = GetNodesOnLine(line);
-                for (int i = 1; i < linkedNodes.Count; i++)
-                {
-                    ConnectTwoNode(linkedNodes[i - 1], linkedNodes[i]);
-                    succefullConnected = true;
-                }
-                if (Lines.Count > 1)
-                {
-                    for (int i = 1; i < Lines.Count; i++)
-                    {
-                        bool test = CheckIfTwoLineIntersect(Lines[i - 1], Lines[i]);
-                    }
-                }
-                return succefullConnected;
-            }
-            return succefullConnected;
-        }
-
-        private List<Node> GetNodesOnLine(Line line)
-        {
-            var onLine = new List<Node>();
-            foreach (var node in nodes)
-            {
-                if (line.IfPointOnTheLine(xAxis[node.X], yAxis[node.Y], circleRadius / 2))
-                {
-                    onLine.Add(node);
-                }
-            }
-            onLine = onLine.OrderBy(s => s.X).OrderBy(s => s.Y).ToList();
-            return onLine;
-        }
-
-        private Node getIfExistOnMap(int x, int y)
-        {
-            foreach (var node in nodes)
-            {
-                if (node.X == x && node.Y == y)
-                    return node;
-            }
-            return null;
-        }
-
-        private void DissConnectTwoNode(Line line)
-        {
-            line.Point1.ConnectedNodes.Remove(line.Point2);
-            line.Point2.ConnectedNodes.Remove(line.Point1);
-            Lines.Remove(line);
-            FillAvailableNodeToConnect(selectedNode);
-        }
-
-        private bool CheckIfTwoLineIntersect(Line line1, Line line2)
-        {
-            float m1 = line1.M;
-            float m2 = line2.M;
-
-            if (m1 == m2 || double.IsNaN(m1) && double.IsNaN(m2))
-                return false; // Parallel segments
-            var b1 = line1.B;
-            var b2 = line2.B;
-
-
-            float X, Y;
-            if (float.IsInfinity(m1))
-            {
-                X = line1.Point1.X;
-                Y = m2 * X + b2;
-
-            }
-
-            else if (float.IsInfinity(m2))
-            {
-                X = line2.Point1.X;
-                Y = m1 * X + b1;
-            }
-            else
-            {
-                X = (b2 - b1) / (m1 - m2);
-                Y = m1 * X + b1;
-            }
-
-            int minX1 = Math.Min(line1.Point1.X, line1.Point2.X);
-            int minX2 = Math.Min(line2.Point1.X, line2.Point2.X);
-            int minX = Math.Min(minX1, minX2);
-
-            int maxX1 = Math.Max(line1.Point1.X, line1.Point2.X);
-            int maxX2 = Math.Max(line2.Point1.X, line2.Point2.X);
-            int maxX = Math.Max(maxX1, maxX2);
-
-            int minY1 = Math.Min(line1.Point1.Y, line1.Point2.Y);
-            int minY2 = Math.Min(line2.Point1.Y, line2.Point2.Y);
-            int minY = Math.Min(minY1, minY2);
-
-            int maxY1 = Math.Max(line1.Point2.Y, line1.Point2.Y);
-            int maxY2 = Math.Max(line2.Point2.Y, line2.Point2.Y);
-            int maxY = Math.Max(maxY1, maxY2);
-
-            if (X > minX && X < maxX && Y > minY && Y < maxY)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private void FillAvailableNodeToConnect(Node sNode)
-        {
-            busyLoactions.Clear();
-            if (sNode != null)
-            {
-                var connectedLines = Lines.Where(l => l.Point1 == sNode || l.Point2 == sNode).ToList();
-                foreach (var line in Lines)
-                {
-                    // Check if the line is connected
-                    var slop = line.M;
-                    foreach (var subLine in connectedLines)
-                    {
-                        var subLineSlop = subLine.M;
-                        if (Math.Round(slop, 3) == Math.Round(subLineSlop, 3) || float.IsNaN(slop) && float.IsNaN(subLineSlop))
-                        {
-                            if (HaveSameSlop(sNode, line.Point1, line.Point2))
-                            {
-                                // Check if its continues
-                                var isContinues = DepthFirstSearchWithFiltering(sNode, line.Point1);
-                                if (isContinues)
-                                {
-                                    busyLoactions.Add(line.Point1);
-                                    busyLoactions.Add(line.Point2);
-                                }
-                                passedNodes.Clear();
-                                stop = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-
         private List<Node> GetNodes(List<Node> nodes)
         {
             Node newNode;
@@ -1205,42 +908,17 @@ namespace Search.Views
             return newNodes;
         }
 
-        private void CleanCustomMapTool()
-        {
-            selectedNode = null;
-            MapValidation_TextBlock.Text = string.Empty;
-            MapValidation_TextBlock.Visibility = Visibility.Collapsed;
-            Lines.Clear();
-        }
-
-        private void RemoveLine(Node node)
-        {
-            for (int i = 0; i < Lines.Count; i++)
-            {
-                if (Lines[i].Point2 == node || Lines[i].Point1 == node)
-                {
-                    Lines.RemoveAt(i);
-                    i--;
-                }
-            }
-        }
-
-        private bool HaveSameSlop(Node node1, Node node2, Node node3)
-        {
-            //(y1 - y2) * (x1 - x3) == (y1 - y3) * (x1 - x2)
-            return (node1.Y - node2.Y) * (node1.X - node3.X) == (node1.Y - node3.Y) * (node1.X - node2.X);
-        }
-
-        private void BuildAnimation3(ObservableCollection<List<Node>> searchedPath)
+        private ObservableCollection<List<Node>> GetAnimationMoves(List<List<Node>> searchedPath)
         {
             List<List<Node>> Animation = new List<List<Node>>();
             List<Node> previoseMove = null;
+            // Generate a moves
             for (int i = 0; i < searchedPath.Count; i++)
             {
                 List<List<Node>> move = null;
                 if (previoseMove == null)
                 {
-                    move = CreatAnimationFromPath(searchedPath[i], 0);
+                    move = CreatAnimationFromOnePath(searchedPath[i], 0);
                 }
                 else
                 {
@@ -1250,23 +928,45 @@ namespace Search.Views
                     {
                         if (searchedPath[i][j] != previoseMove[j])
                         {
-                            move = CreatAnimationFromPath(searchedPath[i], j);
+                            move = CreatAnimationFromOnePath(searchedPath[i], j);
                             finishFiltring = true;
                             break;
                         }
                     }
                     if (!finishFiltring)
-                        move = CreatAnimationFromPath(searchedPath[i], searchedPath[i].Count - 1);
+                        move = CreatAnimationFromOnePath(searchedPath[i], searchedPath[i].Count - 1);
                 }
                 previoseMove = move[move.Count - 1];
-                foreach (var item in move)
+                Animation.AddRange(move);
+            }
+
+            // Remove the duplicated move
+            for (int i = 1; i < Animation.Count; i++)
+            {
+                var walk = Animation[i];
+                for (int j = i; j < Animation.Count; j++)
                 {
-                    AnimationsWalks.Add(item);
+                    if (i != j && walk.Count == Animation[j].Count)
+                    {
+                        bool matched = true;
+                        for (int k = walk.Count - 1; k >= 0; k--)
+                        {
+                            if (walk[k].NodeName != Animation[j][k].NodeName)
+                            {
+                                matched = false;
+                                break;
+                            }
+                        }
+                        if (matched)
+                            Animation.RemoveAt(j);
+                    }
                 }
             }
+
+            return new ObservableCollection<List<Node>>(Animation);
         }
 
-        private List<List<Node>> CreatAnimationFromPath(List<Node> nodes, int startIndex)
+        private List<List<Node>> CreatAnimationFromOnePath(List<Node> nodes, int startIndex)
         {
             List<List<Node>> path = new List<List<Node>>();
             for (int i = startIndex; i < nodes.Count; i++)
@@ -1281,7 +981,42 @@ namespace Search.Views
             }
             return path;
         }
-        
+
+        private void BuildAnimation3(List<List<Node>> searchedPath)
+        {
+            List<List<Node>> Animation = new List<List<Node>>();
+            List<Node> previoseMove = null;
+            for (int i = 0; i < searchedPath.Count; i++)
+            {
+                List<List<Node>> move = null;
+                if (previoseMove == null)
+                {
+                    move = CreatAnimationFromOnePath(searchedPath[i], 0);
+                }
+                else
+                {
+                    int endFilterIndex = (previoseMove.Count > searchedPath[i].Count) ? searchedPath[i].Count : previoseMove.Count;
+                    bool finishFiltring = false;
+                    for (int j = 0; j < endFilterIndex; j++)
+                    {
+                        if (searchedPath[i][j] != previoseMove[j])
+                        {
+                            move = CreatAnimationFromOnePath(searchedPath[i], j);
+                            finishFiltring = true;
+                            break;
+                        }
+                    }
+                    if (!finishFiltring)
+                        move = CreatAnimationFromOnePath(searchedPath[i], searchedPath[i].Count - 1);
+                }
+                previoseMove = move[move.Count - 1];
+                foreach (var item in move)
+                {
+                    AnimationsWalks.Add(item);
+                }
+            }
+        }
+
         private void UpdatePoints()
         {
             SearchTool.StartLocations.Clear();
@@ -1294,104 +1029,69 @@ namespace Search.Views
 
         }
 
+
+
+        #region Design Mode
+
+        private void CleanCustomMapTool()
+        {
+            selectedNode = null;
+            MapValidation_TextBlock.Text = string.Empty;
+            MapValidation_TextBlock.Visibility = Visibility.Collapsed;
+            DesignMapHelper.Lines.Clear();
+        }
+
         private string getLetter()
         {
-            if (removedLetters.Count > 0)
+            if (DesignMapHelper.RemovedLetters.Count > 0)
             {
                 return GetFromRemovedLetters();
             }
             else
             {
-                return letters[newNodeNameCount++];
+                return DesignMapHelper.Letters[newNodeNameCount++];
             }
         }
 
-        private List<Node> initializeMap1()
+        private Tuple<int, int> GetXYAxis(float x, float y)
         {
-            Node S = new Node() { NodeName = "S", X = 1, Y = 3 };
-            Node A = new Node() { NodeName = "A", X = 3, Y = 2 };
-            Node B = new Node() { NodeName = "B", X = 4, Y = 3 };
-            Node C = new Node() { NodeName = "C", X = 5, Y = 1 };
-            Node D = new Node() { NodeName = "D", X = 6, Y = 3 };
-            Node E = new Node() { NodeName = "E", X = 7, Y = 1 };
-            Node G = new Node() { NodeName = "G", X = 7, Y = 2 };
-
-            S.ConnectedNodes = new List<Node>() { A, B };
-            A.ConnectedNodes = new List<Node>() { S, C, B };
-            B.ConnectedNodes = new List<Node>() { S, A, D };
-            C.ConnectedNodes = new List<Node>() { A, E, D };
-            D.ConnectedNodes = new List<Node>() { B, C, G };
-            E.ConnectedNodes = new List<Node>() { C };
-            G.ConnectedNodes = new List<Node>() { D };
-
-            var nodee = new List<Node>() { S, A, B, C, D, E, G };
-
-            return nodee;
-        }
-
-        private List<Node> initializeMap2()
-        {
-            var nodes = new List<Node>();
-            Node A = new Node() { NodeName = "A", X = 0, Y = 2 };
-            Node B = new Node() { NodeName = "B", X = 1, Y = 1 };
-            Node C = new Node() { NodeName = "C", X = 1, Y = 3 };
-            Node D = new Node() { NodeName = "D", X = 3, Y = 0 };
-            Node E = new Node() { NodeName = "E", X = 2, Y = 2 };
-            Node F = new Node() { NodeName = "F", X = 2, Y = 1 };
-            Node G = new Node() { NodeName = "G", X = 4, Y = 1 };
-            Node H = new Node() { NodeName = "H", X = 3, Y = 4 };
-            Node I = new Node() { NodeName = "I", X = 6, Y = 0 };
-            Node J = new Node() { NodeName = "J", X = 5, Y = 2 };
-            Node K = new Node() { NodeName = "K", X = 4, Y = 3 };
-            Node L = new Node() { NodeName = "L", X = 7, Y = 1 };
-            Node M = new Node() { NodeName = "M", X = 8, Y = 2 };
-            Node N = new Node() { NodeName = "N", X = 6, Y = 3 };
-
-            A.ConnectedNodes = new List<Node>() { B, C };
-            B.ConnectedNodes = new List<Node>() { A, D, F };
-            C.ConnectedNodes = new List<Node>() { A, E, H };
-            D.ConnectedNodes = new List<Node>() { B, I, G };
-            E.ConnectedNodes = new List<Node>() { F, C, K };
-            F.ConnectedNodes = new List<Node>() { B, E, G };
-            G.ConnectedNodes = new List<Node>() { D, F, J };
-            H.ConnectedNodes = new List<Node>() { C, K, N };
-            I.ConnectedNodes = new List<Node>() { D, L };
-            J.ConnectedNodes = new List<Node>() { G };
-            K.ConnectedNodes = new List<Node>() { E, H };
-            L.ConnectedNodes = new List<Node>() { I, M };
-            M.ConnectedNodes = new List<Node>() { L, N };
-            N.ConnectedNodes = new List<Node>() { H, M };
-
-            nodes = new List<Node>() { A, B, C, D, E, F, G, H, I, J, K, L, M, N };
-
-
-            return nodes;
-        }
-
-        private List<Map> GetDefualtMaps()
-        {
-            Map map1 = new Map()
+            for (int i = 0; i < xAxis.Length; i++)
             {
-                Name = "Small",
-                IsDeleteEnabled = false,
-                Nodes = initializeMap1()
-
-            };
-            Map map2 = new Map()
-            {
-                Name = "Complex",
-                IsDeleteEnabled = false,
-                Nodes = initializeMap2()
-            };
-
-            return new List<Map>() { map1, map2 };
+                for (int j = 0; j < yAxis.Length; j++)
+                {
+                    if ((x > xAxis[i] - circleRadius && x < xAxis[i] + circleRadius) &&
+                            y > yAxis[j] - circleRadius && y < yAxis[j] + circleRadius)
+                    {
+                        return new Tuple<int, int>(i, j);
+                    }
+                }
+            }
+            return new Tuple<int, int>(-1, 0);
         }
+
+        
+
+        private string GetFromRemovedLetters()
+        {
+            string nodeName = DesignMapHelper.RemovedLetters[0];
+            DesignMapHelper.RemovedLetters.RemoveAt(0);
+            return nodeName;
+        }
+        
+        
+        
+
+        
+
+        
+
+        #endregion
 
 
         #region Drawing Method
 
         private void drawMapPath(
-            CanvasDrawEventArgs args, List<Node> nodess, Color lineColor, 
+            CanvasDrawEventArgs args, List<Node> nodess, Color lineColor,
             float lineThickness)
         {
             for (int i = 0; i < nodess.Count; i++)
@@ -1458,7 +1158,7 @@ namespace Search.Views
         }
 
         private void drawNodes(
-            CanvasDrawEventArgs args, List<Node> nodes, float circleRadius, 
+            CanvasDrawEventArgs args, List<Node> nodes, float circleRadius,
             CanvasTextFormat textFormat)
         {
             for (int i = 0; i < nodes.Count; i++)
@@ -1504,40 +1204,6 @@ namespace Search.Views
                 }
             }
         }
-        #endregion
-
-        private ObservableCollection<List<Node>> BuildAnimation2(ObservableCollection<List<Node>> searchedPath)
-        {
-            List<List<Node>> Animation = new List<List<Node>>();
-            List<Node> previoseMove = null;
-            for (int i = 0; i < searchedPath.Count; i++)
-            {
-                List<List<Node>> move = null;
-                if (previoseMove == null)
-                {
-                    move = CreatAnimationFromPath(searchedPath[i], 0);
-                }
-                else
-                {
-                    int endFilterIndex = (previoseMove.Count > searchedPath[i].Count) ? searchedPath[i].Count : previoseMove.Count;
-                    bool finishFiltring = false;
-                    for (int j = 0; j < endFilterIndex; j++)
-                    {
-                        if (searchedPath[i][j] != previoseMove[j])
-                        {
-                            move = CreatAnimationFromPath(searchedPath[i], j);
-                            finishFiltring = true;
-                            break;
-                        }
-                    }
-                    if (!finishFiltring)
-                        move = CreatAnimationFromPath(searchedPath[i], searchedPath[i].Count - 1);
-                }
-                previoseMove = move[move.Count - 1];
-                Animation.AddRange(move);
-            }
-            return new ObservableCollection<List<Node>>(Animation);
-        }
-        
+        #endregion        
     }
 }
