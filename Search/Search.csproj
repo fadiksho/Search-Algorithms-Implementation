@@ -112,7 +112,7 @@
     </Compile>
     <Compile Include="Utility\FloatingBoundary.cs" />
     <Compile Include="Utility\FloatingContent.cs" />
-    <Compile Include="ViewModel\GraphSearch\SearchToolViewModel.cs" />
+    <Compile Include="ViewModel\GraphSearch\GraphSearchViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Views\GraphSearchPage.xaml.cs">
       <DependentUpon>GraphSearchPage.xaml</DependentUpon>

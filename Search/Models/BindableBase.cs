@@ -1,13 +1,17 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace Search.Models
 {
-    public abstract class BindableBase : INotifyPropertyChanged
+    public abstract class BindableBase :  INotifyPropertyChanged
     {
+
         public event PropertyChangedEventHandler PropertyChanged;
+        
         protected void SetProperty<T>(ref T storage, T value,
-            [System.Runtime.CompilerServices.CallerMemberName] String propertyName = null)
+            [CallerMemberName] String propertyName = null)
         {
             if (!object.Equals(storage, value))
             {
@@ -15,9 +19,14 @@ namespace Search.Models
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-        protected void RaisePropertyChanged([System.Runtime.CompilerServices.CallerMemberName] String propertyName = null)
+        protected void RaisePropertyChanged([CallerMemberName] String propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private readonly Predicate<object> _canExecute;
+        private readonly Action<object> _Execute;
+
+        
     }
 }

@@ -5,9 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
-    xmlns:t="using:Search.Models.GraphSearch"
+    xmlns:model="using:Search.Models.GraphSearch"
+    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:Interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:vm="using:Search.ViewModel.GraphSearch"
     mc:Ignorable="d"
-    Loaded="Page_LoadedAsync">
+    Loaded="{x:Bind ViewModel.Page_LoadedAsync}">
     <Grid>
         <Grid.Background>
             <ImageBrush Stretch="Fill" Opacity="0.8" ImageSource="../Assets/Images/earth1280x640.jpg"/>
@@ -17,6 +20,7 @@
                 <VisualState x:Name="VisualStateNarrow">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="{StaticResource NarrowMinWidth}" />
+                        <AdaptiveTrigger MinWindowHeight="{StaticResource NormalMinHeight}" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!--  TODO: change properties for narrow view  -->
@@ -123,9 +127,7 @@
                         <Setter Target="Tree_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="AddMap_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Speed_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
-
-
-
+                        
                         <!--#endregion-->
 
                     </VisualState.Setters>
@@ -136,7 +138,6 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <!--TODO: change properties for normal view-->
-
 
                     </VisualState.Setters>
                 </VisualState>
@@ -162,9 +163,10 @@
             <ColumnDefinition />
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
+        
         <Grid
             x:Name="toolcontainer"
-            Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}"
             Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -184,7 +186,6 @@
                 VerticalAlignment="Center"
                 Text="Search Type :" Margin="5"
                 Foreground="{StaticResource CustomWhiteBrashColor}">
-
             </TextBlock>
             <ComboBox 
                 x:Name="searchType_ComboBox"
@@ -193,9 +194,9 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Margin="5"
-                ItemsSource="{x:Bind SearchTool.SearchTypes}"
-                SelectedItem="{x:Bind SearchTool.SelectedSearchType,Mode=TwoWay}"
-                SelectionChanged="ComboBox_SearchSelectionChanged"/>
+                ItemsSource="{x:Bind ViewModel.SearchTypes}"    
+                SelectedItem="{x:Bind ViewModel.SelectedSearchType,Mode=TwoWay}"
+                SelectionChanged="{x:Bind ViewModel.ComboBox_SearchSelectionChanged}"/>
 
             <TextBlock
                 x:Name="startLocation_TextBlock"
@@ -211,9 +212,9 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Margin="5"
-                ItemsSource="{x:Bind  SearchTool.StartLocations,Mode=OneWay}"
-                SelectedItem="{x:Bind SearchTool.StartLocation,Mode=TwoWay}"
-                SelectionChanged="ComboBox_StartLocationsSelectionChanged"/>
+                ItemsSource="{x:Bind  ViewModel.StartLocations,Mode=OneWay}"
+                SelectedItem="{x:Bind ViewModel.StartLocation,Mode=TwoWay}"
+                SelectionChanged="{x:Bind ViewModel.ComboBox_StartLocationsSelectionChanged}"/>
             <TextBlock 
                 x:Name="goolLoaction_TextBlock"
                 Grid.Column="2"
@@ -228,9 +229,9 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Margin="5"
-                ItemsSource="{x:Bind SearchTool.GoolLocations,Mode=OneWay}"
-                SelectedItem="{x:Bind SearchTool.GoolLocation,Mode=TwoWay}" 
-                SelectionChanged="ComboBox_GoolLocationSelectionChanged_1"  />
+                ItemsSource="{x:Bind ViewModel.GoolLocations,Mode=OneWay}"
+                SelectedItem="{x:Bind ViewModel.GoolLocation,Mode=TwoWay}" 
+                SelectionChanged="{x:Bind ViewModel.ComboBox_GoolLocationSelectionChanged}"  />
             <TextBlock 
                 x:Name="maps_TextBlock" 
                 Grid.Column="3"
@@ -246,12 +247,13 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Margin="5"
-                SelectedItem="{x:Bind SearchTool.SelectedMap, Mode=TwoWay}"
-                ItemsSource="{x:Bind SearchTool.Maps, Mode=OneWay}"
-                SelectionChanged="ComboBox_MapsSelectionChanged">
+                SelectedItem="{x:Bind ViewModel.SelectedMap, Mode=TwoWay}"
+                ItemsSource="{x:Bind ViewModel.Maps, Mode=OneWay}"
+                
+                SelectionChanged="{x:Bind ViewModel.ComboBox_MapsSelectionChanged}">
                 <ComboBox.ItemTemplate>
                     <!--SelectedItem="{x:Bind SearchTool.SelectedMap, Mode=TwoWay}"-->
-                    <DataTemplate x:DataType="t:Map">
+                    <DataTemplate x:DataType="model:Map">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -262,36 +264,18 @@
                                 x:Name="DeleteMap_Button"
                                 Content="&#xE107;" Grid.Column="1"
                                 FontFamily="Segoe MDL2 Assets"
-                                IsEnabled="{x:Bind IsDeleteEnabled, Mode=OneWay}" 
-                                Click="DeleteMap_Button_ClickAsync"
+                                IsEnabled="{x:Bind IsDeleteEnabled, Mode=OneWay}"
                                 Style="{StaticResource MapToolButtons}"
                                 Tag="{x:Bind Name}"
                                 Background="{x:Null}"
+                                Click="DeleteMap_Button_Click"
                                 Visibility="{Binding Path=IsDropDownOpen, ElementName=maps_ComboBox}">
                             </Button>
                         </Grid>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-
-            <!--<TextBlock x:Name="speed_TextBlock" 
-                       Text="Speed :"
-                       VerticalAlignment="Center"
-                       Grid.Column="4"
-                       Margin="5"  
-                       Foreground="{StaticResource CustomWhiteBrashColor}"
-                       HorizontalAlignment="Left"/>
-            <ComboBox x:Name="speed_ComboBox"
-                      Grid.Column="4"
-                      Grid.Row="1"
-                      Foreground="{StaticResource CustomWhiteBrashColor}"
-                      VerticalAlignment="Center"
-                      HorizontalAlignment="Stretch"
-                      Margin="5"
-                      ItemsSource="{x:Bind SearchTool.SearchSpeed}"
-                      SelectedItem="{x:Bind SearchTool.SelectedSearchSpeed, Mode=TwoWay}"
-                      SelectionChanged="ComboBox_SpeedSelectionChanged" />-->
-
+            
             <Button x:Name="searchbutton"
                     Grid.Column="5"
                     Grid.RowSpan="2"
@@ -300,21 +284,23 @@
                     Foreground="{StaticResource CustomWhiteBrashColor}"
                     Style="{StaticResource GrayButton}"
                     VerticalAlignment="Stretch"        
-                    Click="Search_Button_Click"/>
+                    Click="{x:Bind ViewModel.Search_Button_Click}"/>
         </Grid>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="1"
-                    Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}">
+        <StackPanel 
+            Orientation="Horizontal" Grid.Row="1"
+            Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}">
             <TextBlock Text="Searched Path:"
                        Foreground="{StaticResource CustomWhiteBrashColor}" 
-                       Margin="5" VerticalAlignment="Center">
-                <Run Text="{x:Bind SearchTool.SearchedPathCount, Mode=OneWay}"
+                       Margin="5" 
+                       VerticalAlignment="Center">
+                <Run Text="{x:Bind ViewModel.SearchedPathCount, Mode=OneWay}"
                      Foreground="{StaticResource CustomWhiteBrashColor}" />
             </TextBlock>
         </StackPanel>
         
-        <Grid Grid.Row="2" Margin="5" Grid.ColumnSpan="2"
-              Visibility="{x:Bind SearchTool.ShowCustomMapTool, Mode=OneWay}">
+        <Grid Grid.Row="2" Margin="5" Grid.ColumnSpan="1"
+              Visibility="{x:Bind ViewModel.ShowCustomMapTool, Mode=OneWay}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -332,39 +318,27 @@
                 Grid.ColumnSpan="3"
                 Foreground="Red"
                 Margin="5,0,0,0"
-                Text="{x:Bind SearchTool.NewMapNameValidation, Mode=OneWay}"
-                Visibility="{x:Bind SearchTool.IsNewMapNameValidationEnabled, Mode=OneWay}"
+                Text="{x:Bind ViewModel.NewMapNameValidation, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsNewMapNameValidationEnabled, Mode=OneWay}"
                 FontSize="{StaticResource MediomFontSize}"/>
-            <!--<RadioButton 
-                x:Name="AddNodes_RadioButton" Grid.Row="1" Content="Add Nodes" 
-                Tag="Green" IsChecked="True"
-                Click="ConnectNodes_Button_Click"
-                Style="{StaticResource MyRadioButton}"
-                FontSize="{StaticResource MediomFontSize}"/>
-            <RadioButton 
-                x:Name="ConnectNodes_RadioButton" Grid.Row="2" Content="Connect Nodes" Tag="Green"
-                Click="ConnectNodes_Button_Click"
-                FontSize="{StaticResource MediomFontSize}"
-                Style="{StaticResource MyRadioButton}"
-                IsChecked="{x:Bind SearchTool.ConnectingNodeTogleEnabled, Mode=TwoWay}"
-                />-->
 
-            <TextBox Grid.Row="1" x:Name="MapName_TextBox" Grid.Column="1"
-                     Grid.ColumnSpan="4"
-                     Style="{StaticResource MapName_TextBox_Style}"
-                     HorizontalAlignment="Stretch"
-                     VerticalAlignment="Center"
-                     Margin="5,0,0,0"
-                     Padding="5"
-                     Text="{x:Bind SearchTool.NewMapName, Mode=TwoWay}"
-                     PlaceholderText="Map Name" />
+            <TextBox 
+                Grid.Row="1" x:Name="MapName_TextBox" Grid.Column="1"
+                Grid.ColumnSpan="4"
+                Style="{StaticResource MapName_TextBox_Style}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Margin="5,0,0,0"
+                Padding="5"
+                Text="{x:Bind ViewModel.NewMapName, Mode=TwoWay}"
+                PlaceholderText="Map Name" />
 
             <Button x:Name="Save_Button" Grid.Row="2"
                     Grid.Column="1" 
                     Style="{StaticResource myButton}"
                     Content="&#xE8FB;" Width="75" 
                     FontFamily="Segoe MDL2 Assets"
-                    Click="Save_Button_ClickAsync"
+                    Click="{x:Bind ViewModel.Save_Button_ClickAsync}"
                     Margin="5" />
             <Button x:Name="Cancel_Button" Width="75" 
                     Grid.Row="2"
@@ -372,7 +346,7 @@
                     Margin="5"
                     FontFamily="Segoe MDL2 Assets"
                     Content="&#xE106;"
-                    Click="Cancel_Button_Click"
+                    Click="{x:Bind ViewModel.Cancel_Button_Click}"
                     FontSize="{StaticResource MediomFontSize}"
                     Style="{StaticResource myButton}" />
             <Button x:Name="Info_Button"
@@ -382,7 +356,7 @@
                     FontFamily="Segoe MDL2 Assets"
                     HorizontalAlignment="Right"
                     Style="{StaticResource myButton}"
-                    Click="Info_Button_ClickAsync" >
+                    Click="{x:Bind ViewModel.Info_Button_ClickAsync}" >
 
             </Button>
 
@@ -391,24 +365,25 @@
         <Grid x:Name="CanvasContainer"
               Grid.Row="3"
               Grid.RowSpan="2"
-              SizeChanged="container_SizeChanged">
+              SizeChanged="{x:Bind ViewModel.container_SizeChanged}">
             <canvas:CanvasControl x:Name="canvascontroll" 
-                                  Draw="canvascontroll_Draw"
+                                  Draw="{x:Bind ViewModel.canvascontroll_Draw}"
                                   IsTapEnabled="True" 
-                                  RightTapped="canvascontroll_RightTapped"
-                                  Tapped="canvascontroll_Tapped"
+                                  RightTapped="{x:Bind ViewModel.canvascontroll_RightTapped}"
+                                  Tapped="{x:Bind ViewModel.canvascontroll_Tapped}"
                                   Canvas.ZIndex="2" >
             </canvas:CanvasControl >
         </Grid>
 
         <StackPanel 
             x:Name="SearchMediaToolContainer"
-            Grid.Row="3"
+            Grid.Row="1"
+            Grid.RowSpan="3"
             Grid.Column="1"
             Width="35"
             Height="Auto"
             Margin="5" 
-            Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}" >
+            Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}" >
             <Button 
                 x:Name="PreviousStep_Button"
                 Width="35"
@@ -416,9 +391,9 @@
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"                
-                IsEnabled="{x:Bind SearchTool.PreviousAnimateButtonEnabled, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.PreviousAnimateButtonEnabled, Mode=OneWay}"
                 ToolTipService.ToolTip="Previous Step"
-                Click="PreviousStep_Button_Click">
+                Click="{x:Bind ViewModel.PreviousStep_Button_Click}">
                 <SymbolIcon Symbol="Previous"/>
             </Button>
             <Button
@@ -428,12 +403,11 @@
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"                
-                ToolTipService.ToolTip="{x:Bind SearchTool.AnimationPlayButtonToopTip, Mode=OneWay}"
-                IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}"
-                Click="Play_Button_Click">
-                <SymbolIcon x:Name="play" Symbol="Play"/>
+                ToolTipService.ToolTip="{x:Bind ViewModel.AnimationPlayButtonToopTip, Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.IsAnimationAvailable, Mode=OneWay}"
+                Click="{x:Bind ViewModel.Play_Button_Click}">
+                <SymbolIcon x:Name="play" Symbol="{x:Bind ViewModel.PlayIcon, Mode=OneWay}"/>
             </Button>
-
             <Button
                 x:Name="NextStep_Button"
                 Width="35"
@@ -441,27 +415,26 @@
                 Padding="7"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"                
-                IsEnabled="{x:Bind SearchTool.NextAnimateButtonEnabled,Mode=OneWay}"
+                IsEnabled="{x:Bind ViewModel.NextAnimateButtonEnabled,Mode=OneWay}"
                 ToolTipService.ToolTip="Next Step"
-                Click="NextStep_Button_Click">
-                <SymbolIcon Symbol="Next" />
+                Click="{x:Bind ViewModel.NextStep_Button_Click}">
+                <SymbolIcon Symbol="Next"/>
             </Button>
             <Button
                 x:Name="Speed_Button"
                 Width="35"
                 Height="35"
                 Padding="0"
-                VerticalContentAlignment="Center"
-                HorizontalContentAlignment="Center"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource CircleButtonStyle}"
                 FontSize="22"
                 ToolTipService.ToolTip="Speed"
+                HorizontalContentAlignment="Center"
+                VerticalAlignment="Center"
                 FontFamily="Segoe MDL2 Assets"
-                Content="{x:Bind SearchTool.SearchSpeedIcon, Mode=OneWay}"
-                Click="Speed_Button_Click">
+                Content="{x:Bind ViewModel.SearchSpeedIcon, Mode=OneWay}"
+                Click="{x:Bind ViewModel.Speed_Button_Click}">
             </Button>
-
             <Button
                 x:Name="Tree_Button"
                 Width="35"
@@ -469,47 +442,26 @@
                 Padding="5"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Style="{StaticResource treeInfoButtonStyle}"
-                Click="{x:Bind Tree_Button_ClickAsync}"
+                Click="{x:Bind ViewModel.Tree_Button_ClickAsync}"
                 ToolTipService.ToolTip="Tree Choices"
-                IsEnabled="{x:Bind SearchTool.IsAnimationAvailable, Mode=OneWay}" RenderTransformOrigin="0.5,0.5" >
+                IsEnabled="{x:Bind ViewModel.IsAnimationAvailable, Mode=OneWay}" RenderTransformOrigin="0.5,0.5" >
                 <Button.RenderTransform>
                     <CompositeTransform Rotation="180"/>
                 </Button.RenderTransform>
             </Button>
+            <Button
+                x:Name="AddMap_Button"
+                Grid.Column="1"
+                Padding="0"
+                Width="35"
+                Height="35"
+                Margin="{StaticResource SmallVerticalMargin}"
+                Click="{x:Bind ViewModel.AddNewMap_ButtonClick}"
+                Style="{StaticResource CircleButtonStyle}"
+                Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}"
+                ToolTipService.ToolTip="Design Your Map">
+                <SymbolIcon Symbol="Add" />
+            </Button>
         </StackPanel>
-        
-        <Button
-            x:Name="AddMap_Button"
-            Grid.Row="4"
-            Grid.Column="1"
-            Padding="10"
-            Margin="{StaticResource MediomMargin}"
-            FontSize="{StaticResource MediomFontSize}" 
-            Click="AddNewMap_ButtonClick"
-            Style="{StaticResource CircleButtonStyle}"
-            Visibility="{x:Bind SearchTool.ShowMap, Mode=OneWay}"
-            ToolTipService.ToolTip="Design Your Map">
-            <SymbolIcon Symbol="Add" />
-        </Button>
-        
-        <!--<floatingControll:FloatingContent Boundary="Parent" Grid.Row="4" Canvas.ZIndex="10"
-                                   Width="50" Height="50" HorizontalAlignment="Right"
-                                    VerticalAlignment="Bottom">
-            <Button FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Left" VerticalAlignment="Top"
-                    Content="&#xE710;" Padding="10" FontSize="{StaticResource MediomFontSize}"
-                    Style="{StaticResource }"
-                    Visibility="{x:Bind SearchTool.ShowDiagnostic, Mode=OneWay}"/>
-
-        </floatingControll:FloatingContent>-->
-        <!--<floatingControll:FloatingContent Boundary="Parent" Grid.Row="4" Canvas.ZIndex="10"
-                                    Width="50" Height="50" HorizontalAlignment="Right"
-                                    VerticalAlignment="Bottom" d:IsHidden="True">
-            <Button x:Name="RemoveNodes_Button" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Left" VerticalAlignment="Top"
-                    Visibility="{x:Bind SearchTool.ShowCustomMapTool, Mode=OneWay}"
-                        Content="&#xE107;" Padding="10" FontSize="{StaticResource MediomFontSize}" Click="RemoveNode_Button_Click"
-                         Style="{StaticResource CircleButtonStyle}"
-                    />
-
-        </floatingControll:FloatingContent>-->
     </Grid>
 </Page>
