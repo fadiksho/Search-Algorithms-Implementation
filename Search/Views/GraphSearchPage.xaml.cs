@@ -46,9 +46,9 @@ namespace Search.Views
 
         private void DeleteMap_Button_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.DeleteMap_CommandAsync.Execute(sender);
+            ViewModel.DeleteMap_Command.Execute(sender);
             maps_ComboBox.IsDropDownOpen = false;
         }
-
+        
     }
 }

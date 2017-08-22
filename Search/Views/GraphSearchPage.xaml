@@ -5,12 +5,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
-    xmlns:model="using:Search.Models.GraphSearch"
-    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:converters="using:Search.Converters"
     xmlns:Interactivity="using:Microsoft.Xaml.Interactivity"
-    xmlns:vm="using:Search.ViewModel.GraphSearch"
+    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:model="using:Search.Models.GraphSearch"
     mc:Ignorable="d"
-    Loaded="{x:Bind ViewModel.Page_LoadedAsync}">
+    Loaded="{x:Bind ViewModel.Page_LoadedAsync}"
+    Loading="{x:Bind ViewModel.Page_Loading}">
+    <Page.Resources>
+        <converters:TappedEventArgsToPointConverter x:Key="TappedToPointConverter" />
+        <converters:RightTappedEventArgsToPointConverter x:Key="RightTappedToPointConverter" />
+        <converters:SizeChangeToPointConverter x:Key="SizeChangeToPointConverter" />
+    </Page.Resources>
     <Grid>
         <Grid.Background>
             <ImageBrush Stretch="Fill" Opacity="0.8" ImageSource="../Assets/Images/earth1280x640.jpg"/>
@@ -100,6 +106,7 @@
 
                         <Setter Target="searchbutton.Margin" Value="{StaticResource SmallTextBlockMargin}"/>
 
+                        <Setter Target="SearchedPathCounter_TextBlock.FontSize" Value="{StaticResource SmallFontSize}" />
                         <Setter Target="MapValidation_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
 
                         <Setter Target="MapName_TextBox.Height" Value="{StaticResource SmallHeight}"/>
@@ -109,9 +116,8 @@
 
 
                         <Setter Target="Save_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
-                        <Setter Target="Save_Button.Padding" Value="3"/>
-                        <Setter Target="Save_Button.Margin" Value="2"/>
-
+                        <Setter Target="Save_Button.Padding" Value="3" />
+                        <Setter Target="Save_Button.Margin" Value="2" />
 
                         <Setter Target="Cancel_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="Cancel_Button.Padding" Value="3"/>
@@ -127,7 +133,7 @@
                         <Setter Target="Tree_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="AddMap_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Speed_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
-                        
+
                         <!--#endregion-->
 
                     </VisualState.Setters>
@@ -163,7 +169,7 @@
             <ColumnDefinition />
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        
+
         <Grid
             x:Name="toolcontainer"
             Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}"
@@ -196,7 +202,7 @@
                 Margin="5"
                 ItemsSource="{x:Bind ViewModel.SearchTypes}"    
                 SelectedItem="{x:Bind ViewModel.SelectedSearchType,Mode=TwoWay}"
-                SelectionChanged="{x:Bind ViewModel.ComboBox_SearchSelectionChanged}"/>
+                />
 
             <TextBlock
                 x:Name="startLocation_TextBlock"
@@ -213,8 +219,13 @@
                 HorizontalAlignment="Stretch"
                 Margin="5"
                 ItemsSource="{x:Bind  ViewModel.StartLocations,Mode=OneWay}"
-                SelectedItem="{x:Bind ViewModel.StartLocation,Mode=TwoWay}"
-                SelectionChanged="{x:Bind ViewModel.ComboBox_StartLocationsSelectionChanged}"/>
+                SelectedItem="{x:Bind ViewModel.StartLocation,Mode=TwoWay}" >
+                <Interactivity:Interaction.Behaviors>
+                    <Interactions:EventTriggerBehavior EventName="SelectionChanged">
+                        <Interactions:InvokeCommandAction Command="{x:Bind ViewModel.StartLocationsComboBoxSelection_Command}"/>
+                    </Interactions:EventTriggerBehavior>
+                </Interactivity:Interaction.Behaviors>
+            </ComboBox>
             <TextBlock 
                 x:Name="goolLoaction_TextBlock"
                 Grid.Column="2"
@@ -230,8 +241,13 @@
                 HorizontalAlignment="Stretch"
                 Margin="5"
                 ItemsSource="{x:Bind ViewModel.GoolLocations,Mode=OneWay}"
-                SelectedItem="{x:Bind ViewModel.GoolLocation,Mode=TwoWay}" 
-                SelectionChanged="{x:Bind ViewModel.ComboBox_GoolLocationSelectionChanged}"  />
+                SelectedItem="{x:Bind ViewModel.GoolLocation,Mode=TwoWay}" >
+                <Interactivity:Interaction.Behaviors>
+                    <Interactions:EventTriggerBehavior EventName="SelectionChanged">
+                        <Interactions:InvokeCommandAction Command="{x:Bind ViewModel.GoalLocationsComboBoxSelection_Command}"/>
+                    </Interactions:EventTriggerBehavior>
+                </Interactivity:Interaction.Behaviors>
+            </ComboBox>
             <TextBlock 
                 x:Name="maps_TextBlock" 
                 Grid.Column="3"
@@ -248,9 +264,7 @@
                 HorizontalAlignment="Stretch"
                 Margin="5"
                 SelectedItem="{x:Bind ViewModel.SelectedMap, Mode=TwoWay}"
-                ItemsSource="{x:Bind ViewModel.Maps, Mode=OneWay}"
-                
-                SelectionChanged="{x:Bind ViewModel.ComboBox_MapsSelectionChanged}">
+                ItemsSource="{x:Bind ViewModel.Maps, Mode=OneWay}">
                 <ComboBox.ItemTemplate>
                     <!--SelectedItem="{x:Bind SearchTool.SelectedMap, Mode=TwoWay}"-->
                     <DataTemplate x:DataType="model:Map">
@@ -270,12 +284,18 @@
                                 Background="{x:Null}"
                                 Click="DeleteMap_Button_Click"
                                 Visibility="{Binding Path=IsDropDownOpen, ElementName=maps_ComboBox}">
+
                             </Button>
                         </Grid>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
+                <Interactivity:Interaction.Behaviors>
+                    <Interactions:EventTriggerBehavior EventName="SelectionChanged">
+                        <Interactions:InvokeCommandAction Command="{x:Bind ViewModel.MapsComboBoxSlection_Command}"/>
+                    </Interactions:EventTriggerBehavior>
+                </Interactivity:Interaction.Behaviors>
             </ComboBox>
-            
+
             <Button x:Name="searchbutton"
                     Grid.Column="5"
                     Grid.RowSpan="2"
@@ -284,21 +304,25 @@
                     Foreground="{StaticResource CustomWhiteBrashColor}"
                     Style="{StaticResource GrayButton}"
                     VerticalAlignment="Stretch"        
-                    Click="{x:Bind ViewModel.Search_Button_Click}"/>
+                    Command="{x:Bind ViewModel.SearchCommand}"/>
         </Grid>
 
         <StackPanel 
             Orientation="Horizontal" Grid.Row="1"
             Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}">
-            <TextBlock Text="Searched Path:"
-                       Foreground="{StaticResource CustomWhiteBrashColor}" 
-                       Margin="5" 
-                       VerticalAlignment="Center">
-                <Run Text="{x:Bind ViewModel.SearchedPathCount, Mode=OneWay}"
+            <TextBlock
+                x:Name="SearchedPathCounter_TextBlock"
+                Text="Searched Path: "
+                FontSize="{StaticResource MediomFontSize}"
+                Foreground="{StaticResource CustomWhiteBrashColor}" 
+                Margin="2"
+                VerticalAlignment="Center">
+                <Run Text="9/16"
                      Foreground="{StaticResource CustomWhiteBrashColor}" />
             </TextBlock>
         </StackPanel>
-        
+
+
         <Grid Grid.Row="2" Margin="5" Grid.ColumnSpan="1"
               Visibility="{x:Bind ViewModel.ShowCustomMapTool, Mode=OneWay}">
             <Grid.ColumnDefinitions>
@@ -312,7 +336,7 @@
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <TextBlock 
+            <TextBlock
                 x:Name="MapValidation_TextBlock"
                 Grid.Column="1"
                 Grid.ColumnSpan="3"
@@ -338,7 +362,7 @@
                     Style="{StaticResource myButton}"
                     Content="&#xE8FB;" Width="75" 
                     FontFamily="Segoe MDL2 Assets"
-                    Click="{x:Bind ViewModel.Save_Button_ClickAsync}"
+                    Command="{x:Bind ViewModel.SaveNewMapButton_Command}"
                     Margin="5" />
             <Button x:Name="Cancel_Button" Width="75" 
                     Grid.Row="2"
@@ -346,7 +370,7 @@
                     Margin="5"
                     FontFamily="Segoe MDL2 Assets"
                     Content="&#xE106;"
-                    Click="{x:Bind ViewModel.Cancel_Button_Click}"
+                    Command="{x:Bind ViewModel.CancelNewMapButton_Command}"
                     FontSize="{StaticResource MediomFontSize}"
                     Style="{StaticResource myButton}" />
             <Button x:Name="Info_Button"
@@ -363,16 +387,35 @@
         </Grid>
 
         <Grid x:Name="CanvasContainer"
-              Grid.Row="3"
-              Grid.RowSpan="2"
-              SizeChanged="{x:Bind ViewModel.container_SizeChanged}">
-            <canvas:CanvasControl x:Name="canvascontroll" 
-                                  Draw="{x:Bind ViewModel.canvascontroll_Draw}"
-                                  IsTapEnabled="True" 
-                                  RightTapped="{x:Bind ViewModel.canvascontroll_RightTapped}"
-                                  Tapped="{x:Bind ViewModel.canvascontroll_Tapped}"
-                                  Canvas.ZIndex="2" >
-            </canvas:CanvasControl >
+               Grid.Row="3"
+              Grid.RowSpan="2">
+            <canvas:CanvasControl 
+                    x:Name="canvascontroll" 
+                    Draw="{x:Bind ViewModel.canvascontroll_Draw}"
+                    IsTapEnabled="True" 
+                    Canvas.ZIndex="2" >
+                <Interactivity:Interaction.Behaviors>
+                    <Interactivity:BehaviorCollection>
+                        <Interactions:EventTriggerBehavior EventName="Tapped">
+                            <Interactions:InvokeCommandAction
+                                Command="{x:Bind ViewModel.Tapped_Command}"
+                                InputConverter="{StaticResource TappedToPointConverter}"
+                                InputConverterParameter="{x:Bind CanvasContainer}"/>
+                        </Interactions:EventTriggerBehavior>
+                        <Interactions:EventTriggerBehavior EventName="RightTapped">
+                            <Interactions:InvokeCommandAction
+                                Command="{x:Bind ViewModel.RightTapped_Command}"
+                                InputConverter="{StaticResource RightTappedToPointConverter}"
+                                InputConverterParameter="{x:Bind CanvasContainer}"/>
+                        </Interactions:EventTriggerBehavior>
+                        <Interactions:EventTriggerBehavior EventName="SizeChanged">
+                            <Interactions:InvokeCommandAction
+                                Command="{x:Bind ViewModel.SizeChanged_Command}"
+                                InputConverter="{StaticResource SizeChangeToPointConverter}" />
+                        </Interactions:EventTriggerBehavior>
+                    </Interactivity:BehaviorCollection>
+                </Interactivity:Interaction.Behaviors>
+            </canvas:CanvasControl>
         </Grid>
 
         <StackPanel 
@@ -393,7 +436,7 @@
                 Style="{StaticResource CircleButtonStyle}"                
                 IsEnabled="{x:Bind ViewModel.PreviousAnimateButtonEnabled, Mode=OneWay}"
                 ToolTipService.ToolTip="Previous Step"
-                Click="{x:Bind ViewModel.PreviousStep_Button_Click}">
+                Command="{x:Bind ViewModel.PreviouseAnimtionStepClick_Command}">
                 <SymbolIcon Symbol="Previous"/>
             </Button>
             <Button
@@ -405,7 +448,7 @@
                 Style="{StaticResource CircleButtonStyle}"                
                 ToolTipService.ToolTip="{x:Bind ViewModel.AnimationPlayButtonToopTip, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsAnimationAvailable, Mode=OneWay}"
-                Click="{x:Bind ViewModel.Play_Button_Click}">
+                Command="{x:Bind ViewModel.PlayAnimationClick_Command}">
                 <SymbolIcon x:Name="play" Symbol="{x:Bind ViewModel.PlayIcon, Mode=OneWay}"/>
             </Button>
             <Button
@@ -417,7 +460,7 @@
                 Style="{StaticResource CircleButtonStyle}"                
                 IsEnabled="{x:Bind ViewModel.NextAnimateButtonEnabled,Mode=OneWay}"
                 ToolTipService.ToolTip="Next Step"
-                Click="{x:Bind ViewModel.NextStep_Button_Click}">
+                Command="{x:Bind ViewModel.NextAnimationStepClick_Command}">
                 <SymbolIcon Symbol="Next"/>
             </Button>
             <Button
@@ -433,7 +476,7 @@
                 VerticalAlignment="Center"
                 FontFamily="Segoe MDL2 Assets"
                 Content="{x:Bind ViewModel.SearchSpeedIcon, Mode=OneWay}"
-                Click="{x:Bind ViewModel.Speed_Button_Click}">
+                Command="{x:Bind ViewModel.AnimationSpeedClick_Command}">
             </Button>
             <Button
                 x:Name="Tree_Button"
@@ -456,7 +499,7 @@
                 Width="35"
                 Height="35"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Click="{x:Bind ViewModel.AddNewMap_ButtonClick}"
+                Command="{x:Bind ViewModel.AddNewMapClick_Command}"
                 Style="{StaticResource CircleButtonStyle}"
                 Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}"
                 ToolTipService.ToolTip="Design Your Map">

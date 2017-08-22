@@ -23,10 +23,6 @@ namespace Search.Models
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        private readonly Predicate<object> _canExecute;
-        private readonly Action<object> _Execute;
-
         
     }
 }

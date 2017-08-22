@@ -99,6 +99,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\RightTappedEventArgsToPointConverter.cs" />
+    <Compile Include="Converters\SizeChangeToPointConverter.cs" />
+    <Compile Include="Converters\TappedEventArgsToPointConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -107,8 +110,11 @@
     <Compile Include="Models\GraphSearch\Line.cs" />
     <Compile Include="Models\GraphSearch\Node.cs" />
     <Compile Include="Models\GraphSearch\Road.cs" />
-    <Compile Include="TreeVisuals.xaml.cs">
-      <DependentUpon>TreeVisuals.xaml</DependentUpon>
+    <Compile Include="Models\TreeVisuals\Branch.cs" />
+    <Compile Include="Models\TreeVisuals\Layer.cs" />
+    <Compile Include="ViewModel\TreeVisuals\TreeVisualsViewModel.cs" />
+    <Compile Include="Views\TreeVisualsPage.xaml.cs">
+      <DependentUpon>TreeVisualsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utility\FloatingBoundary.cs" />
     <Compile Include="Utility\FloatingContent.cs" />
@@ -150,7 +156,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TreeVisuals.xaml">
+    <Page Include="Views\TreeVisualsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -159,7 +165,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Helpers\GraphSearch\" />
+    <Folder Include="Helpers\TreeVisuals\" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

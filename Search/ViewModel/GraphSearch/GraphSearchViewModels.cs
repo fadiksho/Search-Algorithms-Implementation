@@ -1,10 +1,12 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Newtonsoft.Json;
 using Search.Models;
 using Search.Models.GraphSearch;
+using Search.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
@@ -31,30 +34,48 @@ namespace Search.ViewModel.GraphSearch
     public class GraphSearchViewModels : ViewModelBase
     {
         public DesignMapHelper DesignMapHelper { get; set; }
-        
+
         public GraphSearchViewModels()
         {
             selectedSearchType = "DEPTH FIRST";
             searchSpeed = 1000;
             searchSpeedIcon = "\uEC49";
-            PlayIcon = Symbol.Pause;
+            PlayIcon = Symbol.Play;
 
             DesignMapHelper = new DesignMapHelper();
+
             SearchSpeedTick = new DispatcherTimer();
             SearchSpeedTick.Tick += SearchSpeedTick_Tick;
             SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, searchSpeed);
-            
+
             animateMoveChanged += SearchTool_animateMoveChanged;
             CorrectPaths.CollectionChanged += CorrectPathss_CollectionChanged;
             AnimationsWalks = new ObservableCollection<List<Node>>();
-            AnimationsWalks.CollectionChanged += AnimationsWalks_CollectionChanged;
+
+            DeleteMap_Command = new RelayCommand<object>(DeleteMapClickHandler);
+            SearchCommand = new RelayCommand(SearchClickHandler, CanSearch);
+            Tapped_Command = new RelayCommand<Point>(TappedCommandHandler, CanTapp);
+            RightTapped_Command = new RelayCommand<Point>(RightTappedCommandHandler, CanTapp);
+            SizeChanged_Command = new RelayCommand<Point>(SizeChangedHandler);
+            AddNewMapClick_Command = new RelayCommand(AddNewMapClick_Handler);
+            PlayAnimationClick_Command = new RelayCommand(PlayAnimationClick_Handler);
+            PreviouseAnimtionStepClick_Command = new RelayCommand(PreviouseAnimtionStepClick_Handler);
+            NextAnimationStepClick_Command = new RelayCommand(NextAnimationStepClick_Handler);
+            AnimationSpeedClick_Command = new RelayCommand(AnimationSpeedClick_Handler);
+
+            SaveNewMapButton_Command = new RelayCommand(SaveNewMapButton_HandlerAsync);
+            CancelNewMapButton_Command = new RelayCommand(CancelNewMapButton_Handler);
+
+            StartLocationsComboBoxSelection_Command = new RelayCommand(StartLocationsComboBoxSelection_Handler);
+            GoalLocationsComboBoxSelection_Command = new RelayCommand(GoalLocationsComboBoxSelection_Handler);
+            MapsComboBoxSlection_Command = new RelayCommand(MapsComboBoxSlection_Handler);
         }
-        
+
         #region Grapth Search Fields
 
         bool drawCorrentRoad, drawAnimation;
         int searchSpeed, newNodeNameCount;
-        
+
         float canvasWidth, canvasHeight, blockWidth, blockHeight,
             circleRadius, sCircleRadius, canvasWidthMargin, canvasHeightMargin,
             sThickness, mThickness, lThickness;
@@ -94,22 +115,8 @@ namespace Search.ViewModel.GraphSearch
 
         #region Commands
         
-        private RelayCommand<object> _deleteMap_CommandAsync;
-        public RelayCommand<object> DeleteMap_CommandAsync
-        {
-            get
-            {
-
-                return _deleteMap_CommandAsync
-                    ?? (_deleteMap_CommandAsync = new RelayCommand<object>(
-                           async sender =>
-                           {
-                               await DeleteMap_CommandAsync_Handler(sender);
-                           }));
-            }
-        }
-
-        private async Task DeleteMap_CommandAsync_Handler(object sender)
+        public RelayCommand<object> DeleteMap_Command { get; set; }
+        private async void DeleteMapClickHandler(object sender)
         {
             try
             {
@@ -147,6 +154,387 @@ namespace Search.ViewModel.GraphSearch
             {
                 Debug.WriteLine(ex.Message);
             }
+        }
+
+        public RelayCommand SearchCommand { get; set; }
+        private bool CanSearch()
+        {
+            Debug.WriteLine("Can Search Excuted!");
+            if (!string.IsNullOrEmpty(StartLocation) &&
+                !string.IsNullOrEmpty(GoolLocation) &&
+                StartLocation != GoolLocation)
+                return true;
+            else
+                return false;
+        }
+        private void SearchClickHandler()
+        {
+            ClearSearchAndAnimation();
+            Road road = new Road() { HeadNode = sL, PassedRoad = new List<Node>() { sL } };
+            //Firt all the connected Node are possible Roads
+            foreach (var connectedNode in road.HeadNode.ConnectedNodes)
+            {
+                road.PossibleNodes.Enqueue(connectedNode);
+            }
+            // Depth First Search
+            if (SelectedSearchType == SearchTypes[0])
+            {
+                DepthFirstSearch(road);
+            }
+            // Breadth First Search
+            else if (SelectedSearchType == SearchTypes[1])
+            {
+                foreach (var possiblenode in road.PossibleNodes)
+                {
+                    Road extendedRoad = new Road
+                    {
+                        HeadNode = possiblenode
+                    };
+                    foreach (var passed in road.PassedRoad)
+                    {
+                        extendedRoad.PassedRoad.Add(passed);
+                    }
+                    extendedRoad.PassedRoad.Add(possiblenode);
+                    road.PossibleRoads.Add(extendedRoad);
+                }
+                BreadthFirst(road);
+            }
+
+            AnimationsWalks = GetAnimationMoves(SearchedPaths);
+
+            startAnimation();
+
+            foreach (var item in SearchedPaths)
+            {
+                foreach (var item2 in item)
+                {
+                    Debug.Write(item2.NodeName + " ");
+                }
+                Debug.WriteLine(" ");
+            }
+            Debug.WriteLine("_______________________________");
+        }
+
+        public RelayCommand<Point> Tapped_Command { get; set; }
+        private void TappedCommandHandler(Point point)
+        {
+            var xTappedLoacation = (float)point.X;
+            var yTappedLoacation = (float)point.Y;
+            var xyIndex = GetXYAxis(xTappedLoacation, yTappedLoacation);
+            bool exist = false;
+            // Select the node if its exist on the board at the tap location
+            if (xyIndex.Item1 != -1)
+            {
+                Node node = DesignMapHelper.GetNodeIfExistOnMap(xyIndex.Item1, xyIndex.Item2, nodes);
+                if (node != null)
+                {
+                    exist = true;
+                    pSelectedNode = selectedNode;
+                    selectedNode = node;
+                }
+                // Add new node to the board if it's not exist at the tap location
+                if (!exist)
+                {
+                    if (newNodeNameCount < DesignMapHelper.Letters.Count || DesignMapHelper.RemovedLetters.Count > 0)
+                    {
+                        bool showFreeLocaion = true;
+                        foreach (var line in DesignMapHelper.Lines)
+                        {
+                            if (line.IfPointOnTheLine(xAxis[xyIndex.Item1], yAxis[xyIndex.Item2], circleRadius / 2))
+                            {
+                                showFreeLocaion = false;
+                            }
+                        }
+                        if (showFreeLocaion)
+                        {
+                            selectedNode = new Node();
+                            selectedNode.X = xyIndex.Item1;
+                            selectedNode.Y = xyIndex.Item2;
+
+                            selectedNode.NodeName = getLetter();
+
+                            selectedNode.ConnectedNodes = new List<Node>();
+                            nodes.Add(selectedNode);
+                            DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
+                        }
+                    }
+                    else
+                        selectedNode = null;
+                }
+                // Connect Two or More Nodes
+                else
+                {
+                    if (selectedNode != null && pSelectedNode != null && selectedNode != pSelectedNode)
+                    {
+                        bool sucssefullConnected = DesignMapHelper.ConnectTwoNodeAndBetween(
+                            selectedNode, pSelectedNode, nodes, xAxis, yAxis, circleRadius);
+                        if (sucssefullConnected)
+                            selectedNode = pSelectedNode;
+                    }
+                    else if (exist && selectedNode == pSelectedNode)
+                    {
+                        selectedNode = null;
+                    }
+                    DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
+                }
+            }
+            else
+            {
+                selectedNode = null;
+            }
+            OnUpdateCanvasUi();
+        }
+
+        public RelayCommand<Point> RightTapped_Command { get; set; }
+        private void RightTappedCommandHandler(Point point)
+        {
+            var xTappedLoacation = (float)point.X;
+            var yTappedLoacation = (float)point.Y;
+            var xyIndex = GetXYAxis(xTappedLoacation, yTappedLoacation);
+
+            // remove the node if it's exist on the board
+            if (xyIndex.Item1 != -1)
+            {
+                foreach (var node in nodes)
+                {
+                    if (node.X == xyIndex.Item1 && node.Y == xyIndex.Item2)
+                    {
+                        DesignMapHelper.AddToRemovedList(node.NodeName);
+
+                        // cut all the road that lead to this node
+                        foreach (var subNode in node.ConnectedNodes)
+                        {
+                            subNode.ConnectedNodes.Remove(node);
+                        }
+
+                        DesignMapHelper.RemoveLine(node);
+                        nodes.Remove(node);
+                        if (selectedNode == node)
+                            selectedNode = null;
+                        OnUpdateCanvasUi();
+                        break;
+                    }
+                }
+            }
+            // remove the line between the connected nodes
+            foreach (var line in DesignMapHelper.Lines)
+            {
+                if (line.IfPointOnTheLine(xTappedLoacation, yTappedLoacation, circleRadius / 2))
+                {
+                    DesignMapHelper.DissConnectTwoNode(line);
+                    DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
+                    OnUpdateCanvasUi();
+                    break;
+                }
+            }
+
+        }
+
+        public RelayCommand<Point> SizeChanged_Command { get; set; }
+        private void SizeChangedHandler(Point point)
+        {
+            canvasWidth = (float)point.X;
+            canvasHeight = (float)point.Y;
+
+            canvasWidthMargin = canvasWidth / 30;
+            canvasHeightMargin = canvasHeight / 15;
+
+            blockWidth = (canvasWidth - 2 * canvasWidthMargin) / 9;
+            blockHeight = (canvasHeight - 2 * canvasHeightMargin) / 4;
+
+            if (blockHeight > blockWidth)
+                circleRadius = blockWidth / 5;
+            else
+                circleRadius = blockHeight / 5;
+
+            sThickness = circleRadius / 10;
+            mThickness = circleRadius / 8;
+            lThickness = circleRadius / 4;
+            sCircleRadius = circleRadius - sThickness;
+            textformat.FontSize = circleRadius;
+            xAxis = new float[10] { canvasWidthMargin, blockWidth + canvasWidthMargin, (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin, (9 * blockWidth) + canvasWidthMargin };
+            yAxis = new float[5] { canvasHeightMargin, blockHeight + canvasHeightMargin, (2 * blockHeight) + canvasHeightMargin, (3 * blockHeight) + canvasHeightMargin, (4 * blockHeight) + canvasHeightMargin };
+
+            Line.XAxis = xAxis;
+            Line.YAxis = yAxis;
+        }
+        private bool CanTapp(Point point)
+        {
+            if (selectedMap != null)
+                return false;
+
+            return true;
+        }
+
+        public RelayCommand AddNewMapClick_Command { get; set; }
+        private void AddNewMapClick_Handler()
+        {
+            ClearSearchAndAnimation();
+            SelectedMap = null;
+            NewMapName = "";
+            NewMapNameValidation = "";
+
+        }
+
+        public RelayCommand PlayAnimationClick_Command { get; set; }
+        private void PlayAnimationClick_Handler()
+        {
+            if (SearchSpeedTick.IsEnabled)
+                debugAnimation();
+            else
+            {
+                if (AnimateMoveNumber == AnimationsWalks.Count && !drawAnimation)
+                    AnimateMoveNumber = 0;
+
+                startAnimation();
+            }
+
+        }
+
+        public RelayCommand PreviouseAnimtionStepClick_Command { get; set; }
+        public void PreviouseAnimtionStepClick_Handler()
+        {
+            if (AnimationsWalks.Count > 0)
+            {
+                debugAnimation();
+                AnimateMoveNumber--;
+            }
+        }
+
+        public RelayCommand NextAnimationStepClick_Command { get; set; }
+        public void NextAnimationStepClick_Handler()
+        {
+            AnimateMoveNumber++;
+        }
+
+        public RelayCommand AnimationSpeedClick_Command { get; set; }
+        public void AnimationSpeedClick_Handler()
+        {
+            if (searchSpeed == 1000)
+            {
+                SearchSpeedIcon = "\uEC4A";
+                searchSpeed = 250;
+            }
+            else if (searchSpeed == 2000)
+            {
+                SearchSpeedIcon = "\uEC49";
+                searchSpeed = 1000;
+            }
+            else if (searchSpeed == 250)
+            {
+                SearchSpeedIcon = "\uEC48";
+                searchSpeed = 2000;
+            }
+            SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, searchSpeed);
+        }
+
+        public RelayCommand SaveNewMapButton_Command { get; set; }
+        public async void SaveNewMapButton_HandlerAsync()
+        {
+            bool exist = false;
+            if (!string.IsNullOrWhiteSpace(NewMapName))
+            {
+                foreach (var mapName in Maps)
+                {
+                    if (mapName.Name == NewMapName)
+                    {
+                        exist = true;
+                        break;
+                    }
+                }
+                if (!exist)
+                {
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        nodes[i].ConnectedNodes = nodes[i].ConnectedNodes.OrderBy(c => c.X).ThenBy(c => c.Y).ToList();
+                    }
+                    var newMap = new Map() { Name = NewMapName, Nodes = nodes.OrderBy(c => c.NodeName).ToList(), IsDeleteEnabled = true };
+                    JsonMaps.Add(newMap);
+                    Maps.Add(newMap);
+                    var jsonStringMap = JsonConvert.SerializeObject(JsonMaps, new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        PreserveReferencesHandling = PreserveReferencesHandling.Objects
+                    });
+                    var file = await ApplicationData.Current.LocalFolder.GetFileAsync("Maps.json");
+                    await FileIO.WriteTextAsync(file, jsonStringMap);
+                    SelectedMap = newMap;
+
+                    NewMapName = "";
+                    NewMapNameValidation = "";
+                }
+                else
+                {
+                    NewMapNameValidation = "This Name is exist in your Maps!";
+                }
+            }
+            else
+            {
+                NewMapNameValidation = "Map name should not be empty!";
+            }
+        }
+
+        public RelayCommand CancelNewMapButton_Command { get; set; }
+        public void CancelNewMapButton_Handler()
+        {
+            SelectedMap = Maps[0];
+            NewMapNameValidation = "";
+            NewMapName = "";
+        }
+
+        public RelayCommand StartLocationsComboBoxSelection_Command { get; set; }
+        public void StartLocationsComboBoxSelection_Handler()
+        {
+            if (!string.IsNullOrEmpty(StartLocation))
+            {
+                // Remove the Start logo from the old Start Node
+                if (sL != null)
+                    sL.StartPoint = false;
+
+                // add the Start logo to new selected Node
+                sL = nodes.Find(n => n.NodeName == StartLocation);
+                sL.StartPoint = true;
+
+                // Stop Animation
+                ClearSearchAndAnimation();
+            }
+        }
+
+        public RelayCommand GoalLocationsComboBoxSelection_Command { get; set; }
+        public void GoalLocationsComboBoxSelection_Handler()
+        {
+            if (!string.IsNullOrEmpty(GoolLocation))
+            {
+                // remove the Gool logo from the old Gool Node
+                if (gL != null)
+                    gL.GoolPoint = false;
+
+                // add the Gool logo to new selected Node
+                gL = nodes.Find(n => n.NodeName == GoolLocation);
+                gL.GoolPoint = true;
+
+                // stop drawing animation
+                ClearSearchAndAnimation();
+            }
+        }
+
+        public RelayCommand MapsComboBoxSlection_Command { get; set; }
+        public void MapsComboBoxSlection_Handler()
+        {
+            MapSelectionChanged_Clear();
+            // if we change the map
+            if (SelectedMap != null)
+            {
+                nodes = GetNodes(SelectedMap.Nodes);
+                UpdatePoints();
+            }
+            // if we creating a new map
+            else if (SelectedMap == null)
+            {
+                newNodeNameCount = 0;
+                CleanCustomMapTool();
+            }
+            ClearSearchAndAnimation();
         }
 
         #endregion
@@ -214,7 +602,6 @@ namespace Search.ViewModel.GraphSearch
             {
                 isAnimationAvailable = value;
                 RaisePropertyChanged();
-
             }
         }
 
@@ -224,11 +611,13 @@ namespace Search.ViewModel.GraphSearch
             get { return selectedSearchType; }
             set
             {
-                if (selectedSearchType != value)
+                if(selectedSearchType != value)
                 {
                     selectedSearchType = value;
                     RaisePropertyChanged();
+                    ClearSearchAndAnimation();
                 }
+                
             }
 
         }
@@ -243,6 +632,7 @@ namespace Search.ViewModel.GraphSearch
                 {
                     startLocation = value;
                     RaisePropertyChanged();
+                    SearchCommand.RaiseCanExecuteChanged();
                 }
 
             }
@@ -258,6 +648,7 @@ namespace Search.ViewModel.GraphSearch
                 {
                     goolLocation = value;
                     RaisePropertyChanged();
+                    SearchCommand.RaiseCanExecuteChanged();
                 }
 
             }
@@ -295,7 +686,7 @@ namespace Search.ViewModel.GraphSearch
             set
             {
                 newMapNameValidation = value;
-                if(!string.IsNullOrEmpty(newMapNameValidation))
+                if (!string.IsNullOrEmpty(newMapNameValidation))
                     IsNewMapNameValidationEnabled = true;
                 else
                     IsNewMapNameValidationEnabled = false;
@@ -428,182 +819,7 @@ namespace Search.ViewModel.GraphSearch
         #endregion
 
         #region Page Events
-
-        public void Search_Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (sL != null && gL != null && sL != gL)
-            {
-                ClearSearchAndAnimation();
-                Road road = new Road() { HeadNode = sL, PassedRoad = new List<Node>() { sL } };
-                //Firt all the connected Node are possible Roads
-                foreach (var connectedNode in road.HeadNode.ConnectedNodes)
-                {
-                    road.PossibleNodes.Enqueue(connectedNode);
-                }
-                // Depth First Search
-                if (SelectedSearchType == SearchTypes[0])
-                {
-                    DepthFirstSearch(road);
-                }
-                // Breadth First Search
-                else if (SelectedSearchType == SearchTypes[1])
-                {
-                    foreach (var possiblenode in road.PossibleNodes)
-                    {
-                        Road extendedRoad = new Road();
-                        extendedRoad.HeadNode = possiblenode;
-                        foreach (var passed in road.PassedRoad)
-                        {
-                            extendedRoad.PassedRoad.Add(passed);
-                        }
-                        extendedRoad.PassedRoad.Add(possiblenode);
-                        road.PossibleRoads.Add(extendedRoad);
-                    }
-                    BreadthFirst(road);
-                }
-
-                AnimationsWalks = GetAnimationMoves(SearchedPaths);
-
-                startAnimation();
-
-                //foreach (var item in SearchedPaths)
-                //{
-                //    foreach (var item2 in item)
-                //    {
-                //        Debug.Write(item2.NodeName + " ");
-                //    }
-                //    Debug.WriteLine(" ");
-                //}
-                //Debug.WriteLine("_______________________________");
-
-            }
-        }
-
-        public void RemoveNode_Button_Click(object sender, RoutedEventArgs e)
-        {
-            nodes.Clear();
-            DesignMapHelper.RemovedLetters.Clear();
-            DesignMapHelper.Lines.Clear();
-            selectedNode = null;
-            newNodeNameCount = 0;
-            OnUpdateCanvasUi();
-        }
-
-        public void ConnectNodes_Button_Click(object sender, RoutedEventArgs e)
-        {
-            DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
-            OnUpdateCanvasUi();
-        }
-
-        public void AddNewMap_ButtonClick(object sender, RoutedEventArgs e)
-        {
-            ClearSearchAndAnimation();
-            SelectedMap = null;
-            NewMapName = "";
-            NewMapNameValidation = "";
-
-        }
         
-        public void Play_Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (SearchSpeedTick.IsEnabled)
-                debugAnimation();
-            else
-            {
-                if (AnimateMoveNumber == AnimationsWalks.Count && !drawAnimation)
-                    AnimateMoveNumber = 0;
-
-                startAnimation();
-            }
-
-        }
-
-        public void PreviousStep_Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (AnimationsWalks.Count > 0)
-            {
-                debugAnimation();
-                AnimateMoveNumber--;
-            }
-        }
-
-        public void NextStep_Button_Click(object sender, RoutedEventArgs e)
-        {
-            AnimateMoveNumber++;
-        }
-
-        public void Speed_Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (searchSpeed == 1000)
-            {
-                SearchSpeedIcon = "\uEC4A";
-                searchSpeed = 250;
-            }
-            else if (searchSpeed == 2000)
-            {
-                SearchSpeedIcon = "\uEC49";
-                searchSpeed = 1000;
-            }
-            else if (searchSpeed == 250)
-            {
-                SearchSpeedIcon = "\uEC48";
-                searchSpeed = 2000;
-            }
-            SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, searchSpeed);
-        }
-
-        public void Cancel_Button_Click(object sender, RoutedEventArgs e)
-        {
-            SelectedMap = Maps[0];
-            NewMapNameValidation = "";
-            NewMapName = "";
-        }
-
-        public async void Save_Button_ClickAsync(object sender, RoutedEventArgs e)
-        {
-            bool exist = false;
-            if (!string.IsNullOrWhiteSpace(NewMapName))
-            {
-                foreach (var mapName in Maps)
-                {
-                    if (mapName.Name == NewMapName)
-                    {
-                        exist = true;
-                        break;
-                    }
-                }
-                if (!exist)
-                {
-                    for (int i = 0; i < nodes.Count; i++)
-                    {
-                        nodes[i].ConnectedNodes = nodes[i].ConnectedNodes.OrderBy(c => c.X).ThenBy(c => c.Y).ToList();
-                    }
-                    var newMap = new Map() { Name = NewMapName, Nodes = nodes.OrderBy(c => c.NodeName).ToList(), IsDeleteEnabled = true };
-                    JsonMaps.Add(newMap);
-                    Maps.Add(newMap);
-                    var jsonStringMap = JsonConvert.SerializeObject(JsonMaps, new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        PreserveReferencesHandling = PreserveReferencesHandling.Objects
-                    });
-                    var file = await ApplicationData.Current.LocalFolder.GetFileAsync("Maps.json");
-                    await FileIO.WriteTextAsync(file, jsonStringMap);
-                    SelectedMap = newMap;
-
-                    NewMapName = "";
-                    NewMapNameValidation = "";
-                }
-                else
-                {
-                    NewMapNameValidation = "This Name is exist in your Maps!";
-                }
-            }
-            else
-            {
-                NewMapNameValidation = "Map name should not be empty!";
-            }
-        }
-
         public async void Tree_Button_ClickAsync(object sender, RoutedEventArgs e)
         {
             CoreApplicationView newView = CoreApplication.CreateNewView();
@@ -612,10 +828,10 @@ namespace Search.ViewModel.GraphSearch
             {
                 Frame frame = new Frame();
 
-                frame.Navigate(typeof(TreeVisuals), SearchedPaths);
+                frame.Navigate(typeof(TreeVisualsPage), SearchedPaths);
                 Window.Current.Content = frame;
-            // You have to activate the window in order to show it later.
-            Window.Current.Activate();
+                // You have to activate the window in order to show it later.
+                Window.Current.Activate();
 
                 newViewId = ApplicationView.GetForCurrentView().Id;
             });
@@ -624,80 +840,20 @@ namespace Search.ViewModel.GraphSearch
 
         public async void Info_Button_ClickAsync(object sender, RoutedEventArgs e)
         {
-            MessageDialog showDialog = new MessageDialog("Left Click To Add Node.\nRight Click to Remove Node/Line.\nThe white circle indicates the selected node.\nThe green circle can connect to white circle.", "Information");
+            string text = "Left Click To Add Node.\nRight Click to Remove Node/Line.\nThe white circle indicates the selected node.\nThe green circle can connect to white circle.";
+            MessageDialog showDialog = new MessageDialog(text, "Information");
             showDialog.Commands.Add(new UICommand("Yes"));
             await showDialog.ShowAsync();
         }
-
-        public void ComboBox_SearchSelectionChanged(object sender, SelectionChangedEventArgs e)
+        
+        public void Page_LoadedAsync(object sender, RoutedEventArgs e)
         {
-            // stop drawing animation if it's drawingskdK
-            ClearSearchAndAnimation();
+
+
         }
 
-        public void ComboBox_StartLocationsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        public async void Page_Loading(FrameworkElement sender, object args)
         {
-            if (!string.IsNullOrEmpty(StartLocation))
-            {
-                // remove the Start logo from the old Start Node
-                if (sL != null)
-                {
-                    sL.StartPoint = false;
-                }
-                // add the Start logo to new selected Node
-                sL = nodes.Find(n => n.NodeName == StartLocation);
-                sL.StartPoint = true;
-
-                // stop drawing animation
-                ClearSearchAndAnimation();
-            }
-        }
-
-        public void ComboBox_GoolLocationSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Get The New Select Gool Location
-            var comboBox = sender as ComboBox;
-            string value = comboBox.SelectedItem as string;
-
-            if (!string.IsNullOrEmpty(value))
-            {
-                // remove the Gool logo from the old Gool Node
-                if (gL != null)
-                {
-                    gL.GoolPoint = false;
-                }
-
-                // add the Gool logo to new selected Node
-                gL = nodes.Find(n => n.NodeName == value);
-                gL.GoolPoint = true;
-
-                // stop drawing animation
-                ClearSearchAndAnimation();
-            }
-        }
-
-        public void ComboBox_MapsSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            MapSelectionChanged_Clear();
-            // if we change the map
-            if (SelectedMap != null)
-            {
-                nodes = GetNodes(SelectedMap.Nodes);
-                UpdatePoints();
-            }
-            // if we creating a new map
-            else if (SelectedMap == null)
-            {
-                newNodeNameCount = 0;
-                CleanCustomMapTool();
-                //designmaphelper.letters = designmaphelper.getalphabeticallyletters();
-            }
-            ClearSearchAndAnimation();
-        }
-
-        public async void Page_LoadedAsync(object sender, RoutedEventArgs e)
-        {
-
             try
             {
                 string path = ApplicationData.Current.LocalFolder.Path + "\\Maps.json";
@@ -735,6 +891,7 @@ namespace Search.ViewModel.GraphSearch
 
         public void canvascontroll_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
+            args.DrawingSession.FillCircle(10, 10, 2, Colors.Red);
             // Defualt Mode
             if (ShowMap)
             {
@@ -856,155 +1013,6 @@ namespace Search.ViewModel.GraphSearch
                         circleRadius,
                         Colors.White,
                         mThickness);
-                }
-            }
-        }
-
-        public void container_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            var test = e.NewSize.Width;
-
-            canvasWidth = (float)e.NewSize.Width;
-            canvasHeight = (float)e.NewSize.Height;
-
-            canvasWidthMargin = canvasWidth / 30;
-            canvasHeightMargin = canvasHeight / 15;
-
-            blockWidth = (canvasWidth - 2 * canvasWidthMargin) / 9;
-            blockHeight = (canvasHeight - 2 * canvasHeightMargin) / 4;
-
-            if (blockHeight > blockWidth)
-                circleRadius = blockWidth / 5;
-            else
-                circleRadius = blockHeight / 5;
-
-            sThickness = circleRadius / 10;
-            mThickness = circleRadius / 8;
-            lThickness = circleRadius / 4;
-            sCircleRadius = circleRadius - sThickness;
-            textformat.FontSize = circleRadius;
-            xAxis = new float[10] { canvasWidthMargin, blockWidth + canvasWidthMargin, (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin, (9 * blockWidth) + canvasWidthMargin };
-            yAxis = new float[5] { canvasHeightMargin, blockHeight + canvasHeightMargin, (2 * blockHeight) + canvasHeightMargin, (3 * blockHeight) + canvasHeightMargin, (4 * blockHeight) + canvasHeightMargin };
-
-            Line.XAxis = xAxis;
-            Line.YAxis = yAxis;
-        }
-
-        public void canvascontroll_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (SelectedMap == null)
-            {
-
-                var xTappedLoacation = (float)e.GetPosition(sender as UIElement).X;
-                var yTappedLoacation = (float)e.GetPosition(sender as UIElement).Y;
-                var xyIndex = GetXYAxis(xTappedLoacation, yTappedLoacation);
-                bool exist = false;
-                // Select the node if its exist on the board at the tap location
-                if (xyIndex.Item1 != -1)
-                {
-                    Node node = DesignMapHelper.GetNodeIfExistOnMap(xyIndex.Item1, xyIndex.Item2, nodes);
-                    if (node != null)
-                    {
-                        exist = true;
-                        pSelectedNode = selectedNode;
-                        selectedNode = node;
-                    }
-                    // Add new node to the board if it's not exist at the tap location
-                    if (!exist)
-                    {
-                        if (newNodeNameCount < DesignMapHelper.Letters.Count || DesignMapHelper.RemovedLetters.Count > 0)
-                        {
-                            bool showFreeLocaion = true;
-                            foreach (var line in DesignMapHelper.Lines)
-                            {
-                                if (line.IfPointOnTheLine(xAxis[xyIndex.Item1], yAxis[xyIndex.Item2], circleRadius / 2))
-                                {
-                                    showFreeLocaion = false;
-                                }
-                            }
-                            if (showFreeLocaion)
-                            {
-                                selectedNode = new Node();
-                                selectedNode.X = xyIndex.Item1;
-                                selectedNode.Y = xyIndex.Item2;
-
-                                selectedNode.NodeName = getLetter();
-
-                                selectedNode.ConnectedNodes = new List<Node>();
-                                nodes.Add(selectedNode);
-                                DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
-                            }
-                        }
-                        else
-                            selectedNode = null;
-                    }
-                    // Connect Two or More Nodes
-                    else
-                    {
-                        if (selectedNode != null && pSelectedNode != null && selectedNode != pSelectedNode)
-                        {
-                            bool sucssefullConnected = DesignMapHelper.ConnectTwoNodeAndBetween(
-                                selectedNode, pSelectedNode, nodes, xAxis, yAxis, circleRadius);
-                            if (sucssefullConnected)
-                                selectedNode = pSelectedNode;
-                        }
-                        else if (exist && selectedNode == pSelectedNode)
-                        {
-                            selectedNode = null;
-                        }
-                        DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
-                    }
-                }
-                else
-                {
-                    selectedNode = null;
-                }
-                OnUpdateCanvasUi();
-            }
-        }
-
-        public void canvascontroll_RightTapped(object sender, RightTappedRoutedEventArgs e)
-        {
-            if (SelectedMap == null)
-            {
-                var xTappedLoacation = (float)e.GetPosition(sender as UIElement).X;
-                var yTappedLoacation = (float)e.GetPosition(sender as UIElement).Y;
-                var xyIndex = GetXYAxis(xTappedLoacation, yTappedLoacation);
-
-                // remove the node if it's exist on the board
-                if (xyIndex.Item1 != -1)
-                {
-                    foreach (var node in nodes)
-                    {
-                        if (node.X == xyIndex.Item1 && node.Y == xyIndex.Item2)
-                        {
-                            DesignMapHelper.AddToRemovedList(node.NodeName);
-
-                            // cut all the road that lead to this node
-                            foreach (var subNode in node.ConnectedNodes)
-                            {
-                                subNode.ConnectedNodes.Remove(node);
-                            }
-
-                            DesignMapHelper.RemoveLine(node);
-                            nodes.Remove(node);
-                            if (selectedNode == node)
-                                selectedNode = null;
-                            OnUpdateCanvasUi();
-                            break;
-                        }
-                    }
-                }
-                // remove the line between the connected nodes
-                foreach (var line in DesignMapHelper.Lines)
-                {
-                    if (line.IfPointOnTheLine(xTappedLoacation, yTappedLoacation, circleRadius / 2))
-                    {
-                        DesignMapHelper.DissConnectTwoNode(line);
-                        DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
-                        OnUpdateCanvasUi();
-                        break;
-                    }
                 }
             }
         }
@@ -1400,13 +1408,6 @@ namespace Search.ViewModel.GraphSearch
             {
                 SearchedPaths.Clear();
                 AnimationsWalks.Clear();
-            }
-        }
-
-        private void AnimationsWalks_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Reset)
-            {
                 IsAnimationAvailable = false;
             }
         }
@@ -1434,6 +1435,16 @@ namespace Search.ViewModel.GraphSearch
         #endregion
 
         #region Design Mode
+
+        private void RemoveNode_Button_Click()
+        {
+            nodes.Clear();
+            DesignMapHelper.RemovedLetters.Clear();
+            DesignMapHelper.Lines.Clear();
+            selectedNode = null;
+            newNodeNameCount = 0;
+            OnUpdateCanvasUi();
+        }
 
         private void CleanCustomMapTool()
         {
