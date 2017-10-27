@@ -49,6 +49,5 @@ namespace Search.Views
             ViewModel.DeleteMap_Command.Execute(sender);
             maps_ComboBox.IsDropDownOpen = false;
         }
-        
     }
 }

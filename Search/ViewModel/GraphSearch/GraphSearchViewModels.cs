@@ -48,7 +48,7 @@ namespace Search.ViewModel.GraphSearch
             SearchSpeedTick.Tick += SearchSpeedTick_Tick;
             SearchSpeedTick.Interval = new TimeSpan(0, 0, 0, 0, searchSpeed);
 
-            animateMoveChanged += SearchTool_animateMoveChanged;
+            AnimateMoveChanged += SearchTool_animateMoveChanged;
             CorrectPaths.CollectionChanged += CorrectPathss_CollectionChanged;
             AnimationsWalks = new ObservableCollection<List<Node>>();
 
@@ -65,7 +65,7 @@ namespace Search.ViewModel.GraphSearch
 
             SaveNewMapButton_Command = new RelayCommand(SaveNewMapButton_HandlerAsync);
             CancelNewMapButton_Command = new RelayCommand(CancelNewMapButton_Handler);
-
+            
             StartLocationsComboBoxSelection_Command = new RelayCommand(StartLocationsComboBoxSelection_Handler);
             GoalLocationsComboBoxSelection_Command = new RelayCommand(GoalLocationsComboBoxSelection_Handler);
             MapsComboBoxSlection_Command = new RelayCommand(MapsComboBoxSlection_Handler);
@@ -202,17 +202,7 @@ namespace Search.ViewModel.GraphSearch
 
             AnimationsWalks = GetAnimationMoves(SearchedPaths);
 
-            startAnimation();
-
-            foreach (var item in SearchedPaths)
-            {
-                foreach (var item2 in item)
-                {
-                    Debug.Write(item2.NodeName + " ");
-                }
-                Debug.WriteLine(" ");
-            }
-            Debug.WriteLine("_______________________________");
+            StartAnimation();
         }
 
         public RelayCommand<Point> Tapped_Command { get; set; }
@@ -247,13 +237,15 @@ namespace Search.ViewModel.GraphSearch
                         }
                         if (showFreeLocaion)
                         {
-                            selectedNode = new Node();
-                            selectedNode.X = xyIndex.Item1;
-                            selectedNode.Y = xyIndex.Item2;
+                            selectedNode = new Node
+                            {
+                                X = xyIndex.Item1,
+                                Y = xyIndex.Item2,
 
-                            selectedNode.NodeName = getLetter();
+                                NodeName = GetLetter(),
 
-                            selectedNode.ConnectedNodes = new List<Node>();
+                                ConnectedNodes = new List<Node>()
+                            };
                             nodes.Add(selectedNode);
                             DesignMapHelper.FillAvailableNodeToConnect(selectedNode);
                         }
@@ -282,6 +274,7 @@ namespace Search.ViewModel.GraphSearch
             {
                 selectedNode = null;
             }
+
             OnUpdateCanvasUi();
         }
 
@@ -336,10 +329,10 @@ namespace Search.ViewModel.GraphSearch
             canvasWidth = (float)point.X;
             canvasHeight = (float)point.Y;
 
-            canvasWidthMargin = canvasWidth / 30;
+            canvasWidthMargin = canvasWidth / 15;
             canvasHeightMargin = canvasHeight / 15;
 
-            blockWidth = (canvasWidth - 2 * canvasWidthMargin) / 9;
+            blockWidth = (canvasWidth - 2 * canvasWidthMargin) / 8;
             blockHeight = (canvasHeight - 2 * canvasHeightMargin) / 4;
 
             if (blockHeight > blockWidth)
@@ -352,7 +345,7 @@ namespace Search.ViewModel.GraphSearch
             lThickness = circleRadius / 4;
             sCircleRadius = circleRadius - sThickness;
             textformat.FontSize = circleRadius;
-            xAxis = new float[10] { canvasWidthMargin, blockWidth + canvasWidthMargin, (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin, (9 * blockWidth) + canvasWidthMargin };
+            xAxis = new float[] { canvasWidthMargin, blockWidth + canvasWidthMargin, (2 * blockWidth) + canvasWidthMargin, (3 * blockWidth) + canvasWidthMargin, (4 * blockWidth) + canvasWidthMargin, (5 * blockWidth) + canvasWidthMargin, (6 * blockWidth) + canvasWidthMargin, (7 * blockWidth) + canvasWidthMargin, (8 * blockWidth) + canvasWidthMargin };
             yAxis = new float[5] { canvasHeightMargin, blockHeight + canvasHeightMargin, (2 * blockHeight) + canvasHeightMargin, (3 * blockHeight) + canvasHeightMargin, (4 * blockHeight) + canvasHeightMargin };
 
             Line.XAxis = xAxis;
@@ -380,13 +373,13 @@ namespace Search.ViewModel.GraphSearch
         private void PlayAnimationClick_Handler()
         {
             if (SearchSpeedTick.IsEnabled)
-                debugAnimation();
+                DebugAnimation();
             else
             {
                 if (AnimateMoveNumber == AnimationsWalks.Count && !drawAnimation)
                     AnimateMoveNumber = 0;
 
-                startAnimation();
+                StartAnimation();
             }
 
         }
@@ -396,7 +389,7 @@ namespace Search.ViewModel.GraphSearch
         {
             if (AnimationsWalks.Count > 0)
             {
-                debugAnimation();
+                DebugAnimation();
                 AnimateMoveNumber--;
             }
         }
@@ -559,10 +552,10 @@ namespace Search.ViewModel.GraphSearch
             AnimationStarted?.Invoke(this, EventArgs.Empty);
         }
 
-        public event EventHandler<int> animateMoveChanged;
+        public event EventHandler<int> AnimateMoveChanged;
         public void OnAnimateMoveChanged(int num)
         {
-            animateMoveChanged?.Invoke(this, num);
+            AnimateMoveChanged?.Invoke(this, num);
         }
 
         private int animateMoveNumber;
@@ -820,23 +813,23 @@ namespace Search.ViewModel.GraphSearch
 
         #region Page Events
         
-        public async void Tree_Button_ClickAsync(object sender, RoutedEventArgs e)
-        {
-            CoreApplicationView newView = CoreApplication.CreateNewView();
-            int newViewId = 0;
-            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                Frame frame = new Frame();
+        //public async void Tree_Button_ClickAsync(object sender, RoutedEventArgs e)
+        //{
+        //    CoreApplicationView newView = CoreApplication.CreateNewView();
+        //    int newViewId = 0;
+        //    await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+        //    {
+        //        Frame frame = new Frame();
 
-                frame.Navigate(typeof(TreeVisualsPage), SearchedPaths);
-                Window.Current.Content = frame;
-                // You have to activate the window in order to show it later.
-                Window.Current.Activate();
+        //        frame.Navigate(typeof(TreeVisualsPage), SearchedPaths);
+        //        Window.Current.Content = frame;
+        //        // You have to activate the window in order to show it later.
+        //        Window.Current.Activate();
 
-                newViewId = ApplicationView.GetForCurrentView().Id;
-            });
-            bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
-        }
+        //        newViewId = ApplicationView.GetForCurrentView().Id;
+        //    });
+        //    bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
+        //}
 
         public async void Info_Button_ClickAsync(object sender, RoutedEventArgs e)
         {
@@ -889,14 +882,15 @@ namespace Search.ViewModel.GraphSearch
 
         #region Canvas Events
 
-        public void canvascontroll_Draw(CanvasControl sender, CanvasDrawEventArgs args)
+        //CanvasControl sender, CanvasDrawEventArgs args
+        public void Canvascontroll_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
             args.DrawingSession.FillCircle(10, 10, 2, Colors.Red);
             // Defualt Mode
             if (ShowMap)
             {
                 // Draw the Map Path
-                drawMapPath(args, nodes, Colors.Gray, mThickness);
+                DrawMapPath(args, nodes, Colors.Gray, mThickness);
                 // Draw the Corrent Path
                 if (FindedCorrectPath && drawCorrentRoad)
                 {
@@ -938,13 +932,13 @@ namespace Search.ViewModel.GraphSearch
                         }
                         args.DrawingSession.DrawText(
                             (i).ToString(),
-                            xAxis[AnimationsWalks[AnimateMoveNumber][i - 1].X] + circleRadius + 3,
-                            yAxis[AnimationsWalks[AnimateMoveNumber][i - 1].Y] - circleRadius - 3,
+                            xAxis[AnimationsWalks[AnimateMoveNumber][i - 1].X] + circleRadius + sThickness,
+                            yAxis[AnimationsWalks[AnimateMoveNumber][i - 1].Y] - circleRadius - sThickness,
                             Colors.White,
                             textformat);
                         args.DrawingSession.DrawText((i + 1).ToString(),
-                            xAxis[AnimationsWalks[AnimateMoveNumber][i].X] + circleRadius + 3,
-                            yAxis[AnimationsWalks[AnimateMoveNumber][i].Y] - circleRadius - 3,
+                            xAxis[AnimationsWalks[AnimateMoveNumber][i].X] + circleRadius + sThickness,
+                            yAxis[AnimationsWalks[AnimateMoveNumber][i].Y] - circleRadius - sThickness,
                             Colors.White,
                             textformat);
 
@@ -961,27 +955,26 @@ namespace Search.ViewModel.GraphSearch
                                 circleRadius,
                                 Colors.Yellow,
                                 lThickness);
-
                         }
                     }
                 }
                 // Draw the Nodes
-                drawNodes(args, nodes, circleRadius, textformat);
+                DrawNodes(args, nodes, circleRadius, textformat);
             }
             // Design Mode
             else
             {
                 // Draw the y/x axis
-                drawCoordinateGeometry(args, xAxis, yAxis, Colors.Black, sThickness);
+                DrawCoordinateGeometry(args, xAxis, yAxis, Colors.Black, sThickness);
                 // Draw the Map Path
-                drawMapPath(args, nodes, Colors.Gray, mThickness);
+                DrawMapPath(args, nodes, Colors.Gray, mThickness);
                 // Draw free locations 
                 if (nodes.Count < 26)
                 {
-                    drawFreeLocations(args, xAxis, yAxis, DesignMapHelper.Lines, Colors.SteelBlue, sCircleRadius, mThickness);
+                    DrawFreeLocations(args, xAxis, yAxis, DesignMapHelper.Lines, Colors.SteelBlue, sCircleRadius, mThickness);
                 }
                 // Draw the Nodes
-                drawNodes(args, nodes, circleRadius, textformat);
+                DrawNodes(args, nodes, circleRadius, textformat);
                 // Draw the selected Nodes and Available Nodes That can be Connected
                 if (selectedNode != null)
                 {
@@ -1021,7 +1014,7 @@ namespace Search.ViewModel.GraphSearch
 
         #region Drawing Method
 
-        private void drawMapPath(
+        private void DrawMapPath(
             CanvasDrawEventArgs args, List<Node> nodess, Color lineColor,
             float lineThickness)
         {
@@ -1038,7 +1031,7 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private void drawFreeLocations(
+        private void DrawFreeLocations(
             CanvasDrawEventArgs args, float[] xAxis, float[] yAxis,
             List<Line> Lines, Color circleColor, float circleRadius, float strokeWidth)
         {
@@ -1064,7 +1057,7 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private void drawCoordinateGeometry(
+        private void DrawCoordinateGeometry(
             CanvasDrawEventArgs args, float[] xAxis, float[] yAxis,
             Color lineColor, float thickness)
         {
@@ -1088,7 +1081,7 @@ namespace Search.ViewModel.GraphSearch
             }
         }
 
-        private void drawNodes(
+        private void DrawNodes(
             CanvasDrawEventArgs args, List<Node> nodes, float circleRadius,
             CanvasTextFormat textFormat)
         {
@@ -1103,15 +1096,6 @@ namespace Search.ViewModel.GraphSearch
                     (nodes[i].NodeName,
                     xAxis[nodes[i].X],
                     yAxis[nodes[i].Y],
-                    Colors.White,
-                    textFormat);
-
-                args.DrawingSession.DrawText(
-                    string.Format("({0},{1})",
-                    nodes[i].X.ToString(),
-                    nodes[i].Y.ToString()),
-                    xAxis[nodes[i].X] + circleRadius,
-                    yAxis[nodes[i].Y] - circleRadius,
                     Colors.White,
                     textFormat);
 
@@ -1211,8 +1195,10 @@ namespace Search.ViewModel.GraphSearch
                     {
                         foreach (var node in extendedRoad.HeadNode.ConnectedNodes)
                         {
-                            Road newExtendedRoad = new Road();
-                            newExtendedRoad.HeadNode = node;
+                            Road newExtendedRoad = new Road
+                            {
+                                HeadNode = node
+                            };
                             bool passed = false;
                             foreach (var pastroad in extendedRoad.PassedRoad)
                             {
@@ -1252,7 +1238,7 @@ namespace Search.ViewModel.GraphSearch
             gL = null;
         }
 
-        private void stopAnimation()
+        private void StopAnimation()
         {
             drawAnimation = false;
             PlayIcon = Symbol.Play;
@@ -1260,7 +1246,7 @@ namespace Search.ViewModel.GraphSearch
             SearchSpeedTick.Stop();
         }
 
-        private void startAnimation()
+        private void StartAnimation()
         {
             drawAnimation = true;
             PlayIcon = Symbol.Pause;
@@ -1268,7 +1254,7 @@ namespace Search.ViewModel.GraphSearch
             SearchSpeedTick.Start();
         }
 
-        private void debugAnimation()
+        private void DebugAnimation()
         {
             drawAnimation = true;
             PlayIcon = Symbol.Play;
@@ -1282,13 +1268,15 @@ namespace Search.ViewModel.GraphSearch
             List<Node> newNodes = new List<Node>();
             foreach (var node in nodes)
             {
-                newNode = new Node();
-                newNode.X = node.X;
-                newNode.Y = node.Y;
-                newNode.NodeName = node.NodeName;
-                newNode.StartPoint = node.StartPoint;
-                newNode.GoolPoint = node.GoolPoint;
-                newNode.ConnectedNodes = new List<Node>();
+                newNode = new Node
+                {
+                    X = node.X,
+                    Y = node.Y,
+                    NodeName = node.NodeName,
+                    StartPoint = node.StartPoint,
+                    GoolPoint = node.GoolPoint,
+                    ConnectedNodes = new List<Node>()
+                };
                 newNodes.Add(newNode);
             }
             // loop throw all newNodes to add the connected nodes that have the same refernce
@@ -1418,11 +1406,13 @@ namespace Search.ViewModel.GraphSearch
             {
                 PreviousAnimateButtonEnabled = false;
             }
+            
             else if (AnimateMoveNumber >= AnimationsWalks.Count)
             {
                 NextAnimateButtonEnabled = false;
                 drawCorrentRoad = true;
-                stopAnimation();
+                drawAnimation = false;
+                StopAnimation();
             }
             else
             {
@@ -1454,7 +1444,7 @@ namespace Search.ViewModel.GraphSearch
             DesignMapHelper.Lines.Clear();
         }
 
-        private string getLetter()
+        private string GetLetter()
         {
             if (DesignMapHelper.RemovedLetters.Count > 0)
             {

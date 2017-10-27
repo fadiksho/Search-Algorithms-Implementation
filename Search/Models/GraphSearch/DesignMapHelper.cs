@@ -18,7 +18,7 @@ namespace Search.Models.GraphSearch
         
         public DesignMapHelper()
         {
-            Letters = getAlphabeticallyLetters();
+            Letters = AlphabeticallyLetters;
         }
 
         public void RemoveLine(Node node)
@@ -184,14 +184,14 @@ namespace Search.Models.GraphSearch
             {
                 Name = "Small",
                 IsDeleteEnabled = false,
-                Nodes = initializeMap1()
+                Nodes = InitializeMap1()
 
             };
             Map map2 = new Map()
             {
                 Name = "Complex",
                 IsDeleteEnabled = false,
-                Nodes = initializeMap2()
+                Nodes = InitializeMap2()
             };
 
             return new List<Map>() { map1, map2 };
@@ -225,7 +225,7 @@ namespace Search.Models.GraphSearch
             List<Node> nodes, float[] xAxis, float[] yAxis, float circleRadius)
         {
             bool succefullConnected = false;
-            if (isFreeLocation(selectedNode))
+            if (IsFreeLocation(selectedNode))
             {
                 Line line = new Line()
                 {
@@ -256,14 +256,17 @@ namespace Search.Models.GraphSearch
             RemovedLetters.Sort();
         }
 
-        private List<string> getAlphabeticallyLetters()
+        private List<string> AlphabeticallyLetters
         {
-            var query = Enumerable.Range(0, 26)
-                            .Select(i => ((char)('A' + i)).ToString()).ToList();
-            return query;
+            get
+            {
+                var query = Enumerable.Range(0, 26)
+                                .Select(i => ((char)('A' + i)).ToString()).ToList();
+                return query;
+            }
         }
 
-        private bool isFreeLocation(Node node)
+        private bool IsFreeLocation(Node node)
         {
             bool free = true;
             foreach (var busyNode in BusyLocations)
@@ -277,7 +280,7 @@ namespace Search.Models.GraphSearch
             return free;
         }
 
-        private List<Node> initializeMap1()
+        private List<Node> InitializeMap1()
         {
             Node S = new Node() { NodeName = "S", X = 1, Y = 3 };
             Node A = new Node() { NodeName = "A", X = 3, Y = 2 };
@@ -300,7 +303,7 @@ namespace Search.Models.GraphSearch
             return nodee;
         }
 
-        private List<Node> initializeMap2()
+        private List<Node> InitializeMap2()
         {
             var nodes = new List<Node>();
             Node A = new Node() { NodeName = "A", X = 0, Y = 2 };

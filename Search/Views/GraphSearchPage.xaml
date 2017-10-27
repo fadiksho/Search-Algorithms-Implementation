@@ -67,8 +67,7 @@
                         <Setter Target="SearchMediaToolContainer.(Grid.Column)" Value="0" />
                         <Setter Target="SearchMediaToolContainer.(Grid.Row)" Value="4" />
 
-                        <Setter Target="SearchMediaToolContainer.Width" Value="Auto" />
-                        <Setter Target="SearchMediaToolContainer.Height" Value="35" />
+                       
                         <!--#endregion-->
 
                         <!--#region Layout items Size -->
@@ -109,19 +108,19 @@
                         <Setter Target="SearchedPathCounter_TextBlock.FontSize" Value="{StaticResource SmallFontSize}" />
                         <Setter Target="MapValidation_TextBlock.FontSize" Value="{StaticResource SmallFontSize}"/>
 
-                        <Setter Target="MapName_TextBox.Height" Value="{StaticResource SmallHeight}"/>
+                        <!--<Setter Target="MapName_TextBox.Height" Value="{StaticResource SmallHeight}"/>
                         <Setter Target="MapName_TextBox.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="MapName_TextBox.Padding" Value="4"/>
-                        <Setter Target="MapName_TextBox.Margin" Value="2"/>
+                        <Setter Target="MapName_TextBox.Margin" Value="2"/>-->
 
 
-                        <Setter Target="Save_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <!--<Setter Target="Save_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="Save_Button.Padding" Value="3" />
-                        <Setter Target="Save_Button.Margin" Value="2" />
+                        <Setter Target="Save_Button.Margin" Value="2" />-->
 
-                        <Setter Target="Cancel_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
+                        <!--<Setter Target="Cancel_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <Setter Target="Cancel_Button.Padding" Value="3"/>
-                        <Setter Target="Cancel_Button.Margin" Value="2"/>
+                        <Setter Target="Cancel_Button.Margin" Value="2"/>-->
 
                         <Setter Target="Info_Button.FontSize" Value="{StaticResource SmallFontSize}"/>
                         <!--<Setter Target="Info_Button.Padding" Value="3"/>-->
@@ -130,9 +129,16 @@
                         <Setter Target="PreviousStep_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Play_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="NextStep_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
-                        <Setter Target="Tree_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
+                        <!--<Setter Target="Tree_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>-->
                         <Setter Target="AddMap_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
                         <Setter Target="Speed_Button.Margin" Value="{StaticResource SmallHorizontalMargin}"/>
+
+                        <Setter Target="PreviousStep_Button.Padding" Value="{StaticResource HorizontallPadding}"/>
+                        <Setter Target="Play_Button.Padding" Value="{StaticResource HorizontallPadding}"/>
+                        <Setter Target="NextStep_Button.Padding" Value="{StaticResource HorizontallPadding}"/>
+                        <!--<Setter Target="Tree_Button.Padding" Value="{StaticResource HorizontallPadding}"/>-->
+                        <Setter Target="AddMap_Button.Padding" Value="{StaticResource HorizontallPadding}"/>
+                        <Setter Target="Speed_Button.Padding" Value="{StaticResource HorizontallPadding}"/>
 
                         <!--#endregion-->
 
@@ -302,12 +308,14 @@
                     Content="&#xE721;"
                     Margin="5"
                     Foreground="{StaticResource CustomWhiteBrashColor}"
-                    Style="{StaticResource GrayButton}"
+                    Style="{StaticResource MediaButton}"
+                    FontFamily="Segoe MDL2 Assets"
                     VerticalAlignment="Stretch"        
                     Command="{x:Bind ViewModel.SearchCommand}"/>
         </Grid>
 
         <StackPanel 
+            
             Orientation="Horizontal" Grid.Row="1"
             Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}">
             <TextBlock
@@ -324,62 +332,70 @@
 
 
         <Grid Grid.Row="2" Margin="5" Grid.ColumnSpan="1"
-              Visibility="{x:Bind ViewModel.ShowCustomMapTool, Mode=OneWay}">
+              Visibility="{x:Bind ViewModel.ShowCustomMapTool, Mode=OneWay}" d:IsHidden="True">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
+            <StackPanel>
+                
+            </StackPanel>
             <TextBlock
                 x:Name="MapValidation_TextBlock"
                 Grid.Column="1"
-                Grid.ColumnSpan="3"
                 Foreground="Red"
                 Margin="5,0,0,0"
                 Text="{x:Bind ViewModel.NewMapNameValidation, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.IsNewMapNameValidationEnabled, Mode=OneWay}"
                 FontSize="{StaticResource MediomFontSize}"/>
+            <StackPanel>
+                <TextBox 
+                    x:Name="MapName_TextBox"
+                    Style="{StaticResource MapName_TextBox_Style}"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Width="200"
+                    Padding="3"
+                    Margin="4,0,0,0"
+                    Height="{StaticResource SmallHeight}"
+                    FontSize="{StaticResource SmallFontSize}"
+                    Text="{x:Bind ViewModel.NewMapName, Mode=TwoWay}"
+                    PlaceholderText="Map Name" />
 
-            <TextBox 
-                Grid.Row="1" x:Name="MapName_TextBox" Grid.Column="1"
-                Grid.ColumnSpan="4"
-                Style="{StaticResource MapName_TextBox_Style}"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                Margin="5,0,0,0"
-                Padding="5"
-                Text="{x:Bind ViewModel.NewMapName, Mode=TwoWay}"
-                PlaceholderText="Map Name" />
-
-            <Button x:Name="Save_Button" Grid.Row="2"
-                    Grid.Column="1" 
-                    Style="{StaticResource myButton}"
-                    Content="&#xE8FB;" Width="75" 
-                    FontFamily="Segoe MDL2 Assets"
-                    Command="{x:Bind ViewModel.SaveNewMapButton_Command}"
-                    Margin="5" />
-            <Button x:Name="Cancel_Button" Width="75" 
-                    Grid.Row="2"
-                    Grid.Column="2"
-                    Margin="5"
-                    FontFamily="Segoe MDL2 Assets"
-                    Content="&#xE106;"
-                    Command="{x:Bind ViewModel.CancelNewMapButton_Command}"
-                    FontSize="{StaticResource MediomFontSize}"
-                    Style="{StaticResource myButton}" />
+                <StackPanel 
+                    Orientation="Horizontal"
+                    Margin="2">
+                    <Button 
+                        x:Name="Save_Button" 
+                        Padding="{StaticResource HorizontallPadding}"
+                        Grid.Column="1"
+                        
+                        Style="{StaticResource MediaButton}"
+                        Content="&#xE8FB;" Width="35" 
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="{StaticResource SmallFontSize}"
+                        Command="{x:Bind ViewModel.SaveNewMapButton_Command}" />
+                    <Button 
+                        x:Name="Cancel_Button"
+                        Width="35" 
+                        FontFamily="Segoe MDL2 Assets"
+                        Content="&#xE106;"
+                        FontSize="{StaticResource SmallFontSize}"
+                        Padding="{StaticResource HorizontallPadding}"
+                        Command="{x:Bind ViewModel.CancelNewMapButton_Command}"
+                        Style="{StaticResource MediaButton}" />
+                </StackPanel>
+            </StackPanel>
             <Button x:Name="Info_Button"
-                    Grid.Row="2"
                     Grid.Column="3"
                     Content="&#xEA1F;"
+                    VerticalAlignment="Stretch"
                     FontFamily="Segoe MDL2 Assets"
                     HorizontalAlignment="Right"
-                    Style="{StaticResource myButton}"
+                    FontSize="40"
+                    Style="{StaticResource MediaButton}"
+                    Padding="{StaticResource HorizontallPadding}"
                     Click="{x:Bind ViewModel.Info_Button_ClickAsync}" >
 
             </Button>
@@ -391,7 +407,7 @@
               Grid.RowSpan="2">
             <canvas:CanvasControl 
                     x:Name="canvascontroll" 
-                    Draw="{x:Bind ViewModel.canvascontroll_Draw}"
+                    Draw="{x:Bind ViewModel.Canvascontroll_Draw}"
                     IsTapEnabled="True" 
                     Canvas.ZIndex="2" >
                 <Interactivity:Interaction.Behaviors>
@@ -422,18 +438,14 @@
             x:Name="SearchMediaToolContainer"
             Grid.Row="1"
             Grid.RowSpan="3"
-            Grid.Column="1"
-            Width="35"
-            Height="Auto"
-            Margin="5" 
+            Grid.Column="1"   
+            Margin="2" 
             Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}" >
             <Button 
                 x:Name="PreviousStep_Button"
-                Width="35"
-                Height="35"
-                Padding="7"
+                Padding="{StaticResource VerticalPadding}"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"                
+                Style="{StaticResource MediaButton}"                
                 IsEnabled="{x:Bind ViewModel.PreviousAnimateButtonEnabled, Mode=OneWay}"
                 ToolTipService.ToolTip="Previous Step"
                 Command="{x:Bind ViewModel.PreviouseAnimtionStepClick_Command}">
@@ -441,11 +453,9 @@
             </Button>
             <Button
                 x:Name="Play_Button"
-                Width="35"
-                Height="35"
-                Padding="7"
+                Padding="{StaticResource VerticalPadding}"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"                
+                Style="{StaticResource MediaButton}"                
                 ToolTipService.ToolTip="{x:Bind ViewModel.AnimationPlayButtonToopTip, Mode=OneWay}"
                 IsEnabled="{x:Bind ViewModel.IsAnimationAvailable, Mode=OneWay}"
                 Command="{x:Bind ViewModel.PlayAnimationClick_Command}">
@@ -453,11 +463,9 @@
             </Button>
             <Button
                 x:Name="NextStep_Button"
-                Width="35"
-                Height="35"
-                Padding="7"
+                Padding="{StaticResource VerticalPadding}"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"                
+                Style="{StaticResource MediaButton}"                
                 IsEnabled="{x:Bind ViewModel.NextAnimateButtonEnabled,Mode=OneWay}"
                 ToolTipService.ToolTip="Next Step"
                 Command="{x:Bind ViewModel.NextAnimationStepClick_Command}">
@@ -465,20 +473,18 @@
             </Button>
             <Button
                 x:Name="Speed_Button"
-                Width="35"
-                Height="35"
-                Padding="0"
+                Padding="{StaticResource VerticalPadding}"
                 Margin="{StaticResource SmallVerticalMargin}"
-                Style="{StaticResource CircleButtonStyle}"
-                FontSize="22"
+                Style="{StaticResource MediaButton}"
                 ToolTipService.ToolTip="Speed"
                 HorizontalContentAlignment="Center"
                 VerticalAlignment="Center"
                 FontFamily="Segoe MDL2 Assets"
                 Content="{x:Bind ViewModel.SearchSpeedIcon, Mode=OneWay}"
                 Command="{x:Bind ViewModel.AnimationSpeedClick_Command}">
+                
             </Button>
-            <Button
+            <!--<Button
                 x:Name="Tree_Button"
                 Width="35"
                 Height="35"
@@ -491,16 +497,14 @@
                 <Button.RenderTransform>
                     <CompositeTransform Rotation="180"/>
                 </Button.RenderTransform>
-            </Button>
+            </Button>-->
             <Button
                 x:Name="AddMap_Button"
                 Grid.Column="1"
-                Padding="0"
-                Width="35"
-                Height="35"
+                Padding="{StaticResource VerticalPadding}"
                 Margin="{StaticResource SmallVerticalMargin}"
                 Command="{x:Bind ViewModel.AddNewMapClick_Command}"
-                Style="{StaticResource CircleButtonStyle}"
+                Style="{StaticResource MediaButton}"
                 Visibility="{x:Bind ViewModel.ShowMap, Mode=OneWay}"
                 ToolTipService.ToolTip="Design Your Map">
                 <SymbolIcon Symbol="Add" />
